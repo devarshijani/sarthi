@@ -9,7 +9,7 @@ router.post('/register', [
     body('fullname.firstname').isLength({min:3}).withMessage('must be of minimum 3 chracter'),
     body('password').isLength({min:6}).withMessage('must be of minmum 6 character')
 ],
-    userController.registorUser 
+    userController.registerUser 
 )
 
 router.post('/login', [
