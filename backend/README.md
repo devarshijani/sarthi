@@ -1,20 +1,14 @@
 
 
-# Users API (Quick Reference)
 
 All endpoints return JSON. Use JWT in `Authorization: Bearer <jwt>` header or as a cookie for authenticated routes.
 
 ---
-
 ## Register
 **POST /users/register**
 
 Create a new user. Requires:
 - `fullname.firstname` (min 3 chars)
-- `email` (unique, valid email)
-- `password` (min 6 chars)
-
-**Success:**
 201 Created
 ```
 {
@@ -26,7 +20,6 @@ Create a new user. Requires:
 
 ---
 
-## Login
 **POST /users/login**
 
 Authenticate with `email` and `password`.
@@ -45,11 +38,9 @@ Authenticate with `email` and `password`.
 
 ## Get Profile
 **GET /users/profile**
-
 Returns authenticated user's profile.
 
 **Success:**
-200 OK
 ```
 {
   "user": { "_id": "...", "fullname": { ... }, "email": "...", "socketId": null }
@@ -65,7 +56,6 @@ Returns authenticated user's profile.
 Logs out user, blacklists token for 24 hours.
 
 **Success:**
-200 OK
 ```
 {
   "message": "Logged out successfully"
@@ -81,11 +71,7 @@ Logs out user, blacklists token for 24 hours.
 # Captain API (Quick Reference)
 
 All endpoints return JSON. Use JWT in `Authorization: Bearer <jwt>` header for authentication (role: captain).
-
 ---
-
-## Register Captain
-**POST /captains/register**
 
 Register a new captain. Requires:
 - `fullname.firstname` (min 3 chars)
