@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
     fullname: {
         firstname: {
             type: String,
-            require: true,
+            required: true,
             minlength: [3, 'must be of minimum 3 chracter'],
         },
         lastname: {
@@ -17,13 +17,13 @@ const userSchema = new mongoose.Schema({
     },
     email: {
         type: String,
-        require: true,
+        required: true,
         unique: true,
         minlength: [6, 'It must be of minimnum 6 character'],
     },
     password: {
         type: String,
-        require: true,
+        required: true,
         minlength: [6, 'must be of minmum 6 character'],
         select: false,
     },
@@ -32,16 +32,16 @@ const userSchema = new mongoose.Schema({
     },
 })
 
-userSchema.methods.generateAuthToken = function() {
-    const token = jwt.sign({_id: this._id}, process.env.JWT_SECRET);
+userSchema.methods.generateAuthToken = function () {
+    const token = jwt.sign({ _id: this._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
     return token;
 }
 
-userSchema.methods.comparePassword = async function(password){
+userSchema.methods.comparePassword = async function (password) {
     return await bcrypt.compare(password, this.password);
 }
 
-userSchema.statics.hashPassword = async function(password) {
+userSchema.statics.hashPassword = async function (password) {
     return await bcrypt.hash(password, 10);
 }
 
