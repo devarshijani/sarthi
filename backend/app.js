@@ -20,7 +20,8 @@ app.get('/', (req, res)=>{
     res.send('hello');
 });
 
-app.use('/users', userRoutes);
-app.use('/captains', captainRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/captains', captainRoutes);
+
 
 module.exports = app;
