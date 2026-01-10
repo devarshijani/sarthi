@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
             type: String,
             // require:true,
             minlength: [3, 'must be of minimum 3 chracter'],
+            default: '',
         }
     },
     email: {

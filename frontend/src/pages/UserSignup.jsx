@@ -5,18 +5,17 @@ import { useContext } from "react";
 import { UserDataContext } from "../context/UserContext";
 
 const UserSignup = () => {
-
   const [firstname, setFirstname] = useState("");
   const [lastname, setLastname] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userData, setUserData] = useState({});
 
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const { user, setUser } = useContext(UserDataContext);
+  const { user, setUser } = useContext(UserDataContext);
 
-  const submitHandler = async(e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
 
     const newUser = {
@@ -28,9 +27,12 @@ const UserSignup = () => {
       password,
     };
 
-    const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/users/register`, newUser);
+    const response = await axios.post(
+      `${import.meta.env.VITE_BACKEND_URL}/api/users/register`,
+      newUser
+    );
 
-    if(response.status === 201){
+    if (response.status === 201) {
       const data = response.data;
 
       setUserData(data);
@@ -49,13 +51,11 @@ const UserSignup = () => {
   return (
     <div className="h-screen w-full flex items-center justify-center bg-white">
       <div className="w-full max-w-sm px-6">
-
         {/* Logo / Title */}
         <h1 className="text-3xl font-bold mb-6">Sarthi</h1>
 
         {/* Form */}
         <form onSubmit={submitHandler} className="space-y-4">
-
           {/* Name fields */}
           <div className="flex gap-3">
             <input
@@ -119,7 +119,6 @@ const UserSignup = () => {
           including by automated means, from Sarthi and its affiliates to the
           number provided.
         </p>
-
       </div>
     </div>
   );

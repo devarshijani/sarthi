@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CaptainDataContext } from "../context/CaptainContext";
-import axios from 'axios';
+import axios from "axios";
 
 const CaptainSignup = () => {
   const navigate = useNavigate();
@@ -12,12 +12,12 @@ const CaptainSignup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const [vehicalColor, setVehicalColor] = useState("");
-  const [vehicalPlate, setVehicalPlate] = useState("");
-  const [vehicalCapacity, setVehicalCapacity] = useState("");
-  const [vehicalType, setVehicalType] = useState("");
+  const [vehicleColor, setVehicleColor] = useState("");
+  const [vehiclePlate, setVehiclePlate] = useState("");
+  const [vehicleCapacity, setVehicleCapacity] = useState("");
+  const [vehicleType, setVehicleType] = useState("");
 
-  const submitHandler = async(e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
 
     const captainData = {
@@ -25,20 +25,21 @@ const CaptainSignup = () => {
       email,
       password,
       vehicle: {
-        color: vehicalColor,
-        plate: vehicalPlate,
-        capacity: vehicalCapacity,
-        type: vehicalType,
+        color: vehicleColor,
+        plate: vehiclePlate,
+        capacity: Number(vehicleCapacity),
+        type: vehicleType,
       },
     };
 
-    const response = await axios.post(`${import.meta.env.VITE_API_URL}/captains/signup`, captainData);
-
-    if(response.status === 201){
-      const data = response.data;
-      setCaptain(data.captain);
-      localStorage.setItem("captainToken", data.token);
-      navigate("/captain-dashboard");
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/captains/signup`,
+        captainData
+      );
+      navigate("/captain-login");
+    } catch (err) {
+      alert(err.response?.data?.message || "Signup failed");
     }
 
     console.log("Captain Signup Data:", captainData);
@@ -101,16 +102,16 @@ const CaptainSignup = () => {
               <input
                 required
                 type="text"
-                value={vehicalColor}
-                onChange={(e) => setVehicalColor(e.target.value)}
+                value={vehicleColor}
+                onChange={(e) => setVehicleColor(e.target.value)}
                 placeholder="Vehicle color"
                 className="w-1/2 input"
               />
               <input
                 required
                 type="text"
-                value={vehicalPlate}
-                onChange={(e) => setVehicalPlate(e.target.value)}
+                value={vehiclePlate}
+                onChange={(e) => setVehiclePlate(e.target.value)}
                 placeholder="Vehicle number"
                 className="w-1/2 input"
               />
@@ -120,16 +121,16 @@ const CaptainSignup = () => {
               <input
                 required
                 type="number"
-                value={vehicalCapacity}
-                onChange={(e) => setVehicalCapacity(e.target.value)}
+                value={vehicleCapacity}
+                onChange={(e) => setVehicleCapacity(e.target.value)}
                 placeholder="Capacity"
                 className="w-1/2 input"
               />
 
               <select
                 required
-                value={vehicalType}
-                onChange={(e) => setVehicalType(e.target.value)}
+                value={vehicleType}
+                onChange={(e) => setVehicleType(e.target.value)}
                 className="w-1/2 input bg-white"
               >
                 <option value="">Vehicle type</option>
@@ -164,7 +165,7 @@ const CaptainSignup = () => {
           Signup as User
         </button>
 
-        <p className="text-xs text-gray-500 mt-4 leading-relaxed text-center">
+        <p className="text-xs text-gray-500 mt-8 leading-relaxed text-center">
           By proceeding, you consent to receive calls, WhatsApp, or SMS messages
           from Sarthi.
         </p>

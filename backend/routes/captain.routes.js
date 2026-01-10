@@ -4,7 +4,7 @@ const router = express.Router();
 const {body} = require('express-validator');
 const authMiddleware = require('../middlewares/auth.middleware');
 
-router.post('/register',[
+router.post('/signup',[
     body('fullname.firstname').notEmpty().withMessage('First name is required'),
     body('email').isEmail().withMessage('Valid email is required'),
     body('password').isLength({min: 6}).withMessage('Password must be at least 6 characters long'),

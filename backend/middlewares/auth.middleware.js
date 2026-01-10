@@ -8,32 +8,28 @@ module.exports.authUser = async (req, res, next) => {
     try {
         const token =
             req.cookies?.token ||
-            req.headers.authorization?.split(' ')[1];
+            req.headers.authorization?.split(" ")[1];
 
         if (!token) {
-            return res.status(401).json({ message: 'No token provided' });
+            return res.status(401).json({ message: "No token provided" });
         }
 
         const isBlacklisted = await blacklistTokenModel.findOne({ token });
         if (isBlacklisted) {
-            return res.status(401).json({ message: 'Token revoked' });
+            return res.status(401).json({ message: "Token revoked" });
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await userModel.findById(decoded._id);
 
-        const user = await userModel.findById(decoded.id);
         if (!user) {
-            return res.status(401).json({ message: 'User not found' });
+            return res.status(401).json({ message: "User not found" });
         }
 
         req.user = user;
-        req.token = token;
         next();
     } catch (err) {
-        return res.status(401).json({
-            message: 'Invalid or expired token',
-            error: err.message
-        });
+        return res.status(401).json({ message: "Unauthorized" });
     }
 };
 
