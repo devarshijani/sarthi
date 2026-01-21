@@ -9,15 +9,21 @@ const LookingForDriver = ({
 }) => {
   // Simulate finding a driver after 3 seconds
   useEffect(() => {
+    if (
+      typeof setLookingForDriverOpen !== "function" ||
+      typeof setWaitingForDriverOpen !== "function"
+    ) {
+      console.error("LookingForDriver: setter props missing");
+      return;
+    }
+
     const timer = setTimeout(() => {
       setLookingForDriverOpen(false);
-      setTimeout(() => {
-        setWaitingForDriverOpen(true);
-      }, 400);
-    }, 3000); // 3 seconds
+    }, 3000);
 
     return () => clearTimeout(timer);
   }, [setLookingForDriverOpen, setWaitingForDriverOpen]);
+
 
   return (
     <div>

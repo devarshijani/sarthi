@@ -3,11 +3,22 @@ import map from "../assets/map.png";
 import CaptainDetails from "../components/CaptainDetails";
 import RidePopUp from "../components/RidePopUp";
 import ConfirmRidePopUp from "../components/ConfirmRidePopUp";
+import { SocketDataContext } from "../context/SocketContext";
+import { CaptainDataContext } from "../context/CaptainContext";
+import { useContext } from "react";
 import gsap from "gsap";
 
 const CaptainDashboard = () => {
   const ridePopupRef = useRef(null);
   const confirmPanelRef = useRef(null);
+
+  const { socket } = useContext(SocketDataContext);
+  const { captain } = useContext(CaptainDataContext);
+
+  useEffect(() => {
+    console.log(captain)
+    socket.emit("join", { userType: "captain", userId: captain?.id })
+  }, [captain])
 
   const [showRidePopup, setShowRidePopup] = useState(true);
   const [showConfirmPanel, setShowConfirmPanel] = useState(false);

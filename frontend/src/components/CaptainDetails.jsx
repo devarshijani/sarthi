@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
+import { CaptainDataContext } from "../context/CaptainContext";
 
 const CaptainDetails = () => {
+  const { captain } = React.useContext(CaptainDataContext);
   return (
     <div>
       <div className="h-1/2 p-4">
@@ -14,8 +16,9 @@ const CaptainDetails = () => {
                 className="h-14 w-14 rounded-full object-cover"
               />
               <div>
-                <h4 className="text-lg font-semibold">Sarthak</h4>
-                <p className="text-sm text-gray-500">Maruti Suzuki Alto</p>
+
+                <h4 className="text-lg font-semibold capitalize">{captain?.fullName?.firstName + " " + captain?.fullName?.lastName}</h4>
+                <p className="text-sm text-gray-500">Audi</p>
               </div>
             </div>
 
@@ -34,7 +37,7 @@ const CaptainDetails = () => {
               You are online and ready to accept rides
             </p>
           </div>
-          
+
         </div>
         {/* Stats Row */}
         <div className="mt-6 grid grid-cols-3 gap-4 text-center">

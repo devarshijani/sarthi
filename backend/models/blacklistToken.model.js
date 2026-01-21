@@ -10,7 +10,7 @@ const blacklistTokenSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
         // Document will automatically be removed after 24 hours (86400 seconds)
-        expires: 60 * 60 * 24
+        expires: 60 * 60 * 24 * 7
     }
 });
 
