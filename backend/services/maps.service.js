@@ -145,3 +145,22 @@ module.exports.getAutoCompleteSuggestions = async (input) => {
         throw new Error("Failed to fetch suggestions");
     }
 };
+
+const captainsModel = require("../models/captain.model");
+
+module.exports.getCaptainInRadius = async (lat, lng, radius) => {
+    // radius in km
+    const captains = await captainsModel.find({
+        location: {
+            $near: {
+                $geometry: {
+                    type: "Point",
+                    coordinates: [lng, lat]
+                },
+                $maxDistance: radius * 1000 // meters
+            }
+        }
+    });
+
+    return captains;
+};

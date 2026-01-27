@@ -44,6 +44,13 @@ const captainSchema = new mongoose.Schema({
         type: String,
         enum: ['car', 'bike', 'auto'],
         required: true
+    },
+    location: {
+        lat: Number,
+        lng: Number
+    },
+    socketId: {
+        type: String
     }
 }, { timestamps: true });
 

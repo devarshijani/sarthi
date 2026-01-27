@@ -16,11 +16,41 @@ const CaptainDashboard = () => {
   const { captain } = useContext(CaptainDataContext);
 
   useEffect(() => {
-    console.log(captain)
-    socket.emit("join", { userType: "captain", userId: captain?.id })
-  }, [captain])
+    if (!captain?._id) return;
 
-  const [showRidePopup, setShowRidePopup] = useState(true);
+    socket.emit("join", {
+      userType: "captain",
+      userId: captain._id,
+    });
+
+    const updateLocation = () => {
+      if (!navigator.geolocation) return;
+
+      navigator.geolocation.getCurrentPosition((position) => {
+        socket.emit("updateLocation", {
+          userType: "captain",
+          userId: captain._id,
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      });
+    };
+
+    updateLocation(); // immediate first update
+
+    const interval = setInterval(updateLocation, 10000);
+
+    return () => clearInterval(interval);
+  }, [captain, socket]);
+
+  socket.on("new-ride", (data) => {
+    console.log(data);
+    setRide(data);
+    setShowRidePopup(true);
+  });
+
+  const [ride, setRide] = useState(null);
+  const [showRidePopup, setShowRidePopup] = useState(false);
   const [showConfirmPanel, setShowConfirmPanel] = useState(false);
 
   /* Ride popup animation */
@@ -30,6 +60,7 @@ const CaptainDashboard = () => {
       duration: 0.5,
       ease: "power3.out",
     });
+
   }, [showRidePopup]);
 
   /* Confirm panel animation */
@@ -77,6 +108,7 @@ const CaptainDashboard = () => {
         className="fixed bottom-0 left-0 w-full bg-white px-4 py-6 rounded-t-3xl shadow-2xl translate-y-full z-20"
       >
         <RidePopUp
+          ride={ride}
           onAccept={handleAcceptRide}
           onIgnore={handleIgnoreRide}
         />

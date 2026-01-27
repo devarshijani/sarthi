@@ -1,6 +1,6 @@
 import React from "react";
 
-const RidePopUp = ({ onAccept, onIgnore }) => {
+const RidePopUp = ({ ride, onAccept, onIgnore }) => {
   return (
     <div>
       <h3 className="text-xl font-semibold mb-4">
@@ -14,15 +14,15 @@ const RidePopUp = ({ onAccept, onIgnore }) => {
             alt="user"
             className="h-10 w-10 rounded-full"
           />
-          <p className="font-semibold">Harsh Patel</p>
+          <p className="font-semibold">{ride?.user?.fullname?.firstname} {ride?.user?.fullname?.lastname}</p>
         </div>
         <p className="font-semibold">2.2 KM</p>
       </div>
 
       <div className="space-y-3 mb-5">
-        <p>📍 562/11-A, Kankariya Talab</p>
-        <p>🏁 City Mall, Bhopal</p>
-        <p>₹193.20 • Cash</p>
+        <p>📍 {ride?.pickup}</p>
+        <p>🏁 {ride?.destination}</p>
+        <p>₹{ride?.fare} • Cash</p>
       </div>
 
       <button

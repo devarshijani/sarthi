@@ -1,19 +1,39 @@
 import React from "react";
+import axios from "axios";
 
-const ConfirmedRide = ({ 
-  setConfirmRideOpen, 
-  setVehiclePanelOpen, 
+const ConfirmedRide = ({
+  setConfirmRideOpen,
+  setVehiclePanelOpen,
   setLookingForDriverOpen, // NEW
-  pickup, 
-  destination, 
-  selectedVehicle 
+  pickup,
+  destination,
+  selectedVehicle
 }) => {
-  
-  const handleConfirmRide = () => {
+
+  const handleConfirmRide = async () => {
     setConfirmRideOpen(false);
-    setTimeout(() => {
-      setLookingForDriverOpen(true);
-    }, 400);
+    setLookingForDriverOpen(true);
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/rides/create`,
+        {
+          pickup,
+          destination,
+          vehicleType: selectedVehicle.name === "UberGo" ? "car" : selectedVehicle.name.toLowerCase(),
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      console.log("Ride Created:", response.data);
+      // You might want to store the create ride in context or parent state via a prop
+      // e.g., setRide(response.data) if passed from Home.jsx
+    } catch (error) {
+      console.error("Error creating ride:", error);
+      // Handle error (maybe show a toast or revert state)
+    }
   };
 
   return (
@@ -85,7 +105,7 @@ const ConfirmedRide = ({
       </div>
 
       {/* Confirm Button */}
-      <button 
+      <button
         onClick={handleConfirmRide}
         className="w-full bg-green-600 text-white py-4 rounded-xl font-semibold text-lg hover:bg-green-700 transition-colors"
       >
