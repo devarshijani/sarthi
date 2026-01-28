@@ -1,11 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
 import map from "../assets/map.png";
 import CaptainDetails from "../components/CaptainDetails";
 import RidePopUp from "../components/RidePopUp";
 import ConfirmRidePopUp from "../components/ConfirmRidePopUp";
 import { SocketDataContext } from "../context/SocketContext";
 import { CaptainDataContext } from "../context/CaptainContext";
-import { useContext } from "react";
 import gsap from "gsap";
 
 const CaptainDashboard = () => {
@@ -15,8 +14,15 @@ const CaptainDashboard = () => {
   const { socket } = useContext(SocketDataContext);
   const { captain } = useContext(CaptainDataContext);
 
+  const [ride, setRide] = useState(null);
+  const [showRidePopup, setShowRidePopup] = useState(false);
+  const [showConfirmPanel, setShowConfirmPanel] = useState(false);
+
+  /* ================================
+     SOCKET JOIN + LOCATION UPDATES
+  ================================= */
   useEffect(() => {
-    if (!captain?._id) return;
+    if (!socket || !captain?._id) return;
 
     socket.emit("join", {
       userType: "captain",
@@ -26,44 +32,64 @@ const CaptainDashboard = () => {
     const updateLocation = () => {
       if (!navigator.geolocation) return;
 
-      navigator.geolocation.getCurrentPosition((position) => {
-        socket.emit("updateLocation", {
-          userType: "captain",
-          userId: captain._id,
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-      });
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          socket.emit("update-location-captain", {
+            userId: captain._id,
+            location: {
+              ltd: position.coords.latitude,
+              lng: position.coords.longitude,
+            },
+          });
+        },
+        (err) => console.error("Geolocation error:", err),
+        { enableHighAccuracy: true }
+      );
     };
 
-    updateLocation(); // immediate first update
+    updateLocation(); // first hit
+    const intervalId = setInterval(updateLocation, 10000);
 
-    const interval = setInterval(updateLocation, 10000);
+    return () => clearInterval(intervalId);
+  }, [socket, captain?._id]);
 
-    return () => clearInterval(interval);
-  }, [captain, socket]);
+  /* ================================
+     RECEIVE NEW RIDE (IMPORTANT)
+  ================================= */
+  useEffect(() => {
+    if (!socket) return;
 
-  socket.on("new-ride", (data) => {
-    console.log(data);
-    setRide(data);
-    setShowRidePopup(true);
-  });
+    const handleNewRide = (rideData) => {
+      console.log("🚕 New ride received on captain:", rideData);
+      setRide(rideData);
+      setShowRidePopup(true);
+    };
 
-  const [ride, setRide] = useState(null);
-  const [showRidePopup, setShowRidePopup] = useState(false);
-  const [showConfirmPanel, setShowConfirmPanel] = useState(false);
+    socket.on("new-ride", handleNewRide);
 
-  /* Ride popup animation */
+    return () => {
+      socket.off("new-ride", handleNewRide);
+    };
+  }, [socket]);
+
+  /* ================================
+     GSAP ANIMATIONS
+  ================================= */
+
+  // Ensure panels start hidden (IMPORTANT)
+  useEffect(() => {
+    gsap.set(ridePopupRef.current, { y: "100%" });
+    gsap.set(confirmPanelRef.current, { y: "100%" });
+  }, []);
+
   useEffect(() => {
     gsap.to(ridePopupRef.current, {
       y: showRidePopup ? 0 : "100%",
       duration: 0.5,
       ease: "power3.out",
     });
-
   }, [showRidePopup]);
 
-  /* Confirm panel animation */
   useEffect(() => {
     gsap.to(confirmPanelRef.current, {
       y: showConfirmPanel ? 0 : "100%",
@@ -72,19 +98,28 @@ const CaptainDashboard = () => {
     });
   }, [showConfirmPanel]);
 
-  /* Handlers */
-  const handleAcceptRide = () => {
+  /* ================================
+     HANDLERS
+  ================================= */
+  const handleAcceptRide = (rideData) => {
+    socket.emit("accept-ride", {
+      rideId: rideData._id,
+      captainId: captain._id,
+    });
+
+    setRide(rideData);
     setShowRidePopup(false);
     setShowConfirmPanel(true);
   };
+
 
   const handleIgnoreRide = () => {
     setShowRidePopup(false);
   };
 
   const handleCancelRide = () => {
-    setShowRidePopup(false);
     setShowConfirmPanel(false);
+    setShowRidePopup(false);
   };
 
   const handleConfirmRide = () => {
@@ -102,10 +137,10 @@ const CaptainDashboard = () => {
       {/* CAPTAIN INFO */}
       <CaptainDetails />
 
-      {/* RIDE POPUP */}
+      {/* RIDE REQUEST POPUP */}
       <div
         ref={ridePopupRef}
-        className="fixed bottom-0 left-0 w-full bg-white px-4 py-6 rounded-t-3xl shadow-2xl translate-y-full z-20"
+        className="fixed bottom-0 left-0 w-full bg-white px-4 py-6 rounded-t-3xl shadow-2xl z-20"
       >
         <RidePopUp
           ride={ride}
@@ -117,7 +152,7 @@ const CaptainDashboard = () => {
       {/* CONFIRM RIDE PANEL */}
       <div
         ref={confirmPanelRef}
-        className="fixed bottom-0 left-0 w-full bg-white px-4 py-6 rounded-t-3xl shadow-2xl translate-y-full z-30"
+        className="fixed bottom-0 left-0 w-full bg-white px-4 py-6 rounded-t-3xl shadow-2xl z-30"
       >
         <ConfirmRidePopUp
           onConfirm={handleConfirmRide}

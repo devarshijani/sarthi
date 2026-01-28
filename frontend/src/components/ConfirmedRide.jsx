@@ -23,7 +23,9 @@ const ConfirmedRide = ({
           vehicleType: selectedVehicle.name === "UberGo" ? "car" : selectedVehicle.name.toLowerCase(),
         },
         {
-          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+          },
         }
       );
 

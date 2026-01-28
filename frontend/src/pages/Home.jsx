@@ -70,6 +70,18 @@ const Home = () => {
 
   /* ---------------- FETCH SUGGESTIONS ---------------- */
 
+  useEffect(() => {
+    receiveMessage("ride-accepted", ({ ride, captain }) => {
+      console.log("🚕 Ride accepted by captain", captain);
+
+      setLookingForDriverOpen(false);
+      setWaitingForDriverOpen(true);
+
+      // store captain details if needed
+    });
+  }, []);
+
+
   const fetchSuggestions = async (value, type) => {
     if (!value) {
       if (type === "pickup") setPickupSuggestions([]);

@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const captainSchema = new mongoose.Schema({
+
     fullName: {
         firstName: {
             type: String,
@@ -46,9 +47,17 @@ const captainSchema = new mongoose.Schema({
         required: true
     },
     location: {
-        lat: Number,
-        lng: Number
+        type: {
+            type: String,
+            enum: ["Point"],
+            default: "Point"
+        },
+        coordinates: {
+            type: [Number], // [lng, lat]
+            required: true
+        }
     },
+
     socketId: {
         type: String
     }
@@ -72,6 +81,8 @@ captainSchema.methods.generateAuthToken = function () {
         { expiresIn: '24h' }
     );
 };
+
+captainSchema.index({ location: "2dsphere" });
 
 // const captainModel = mongoose.model('Captain', captainSchema);
 

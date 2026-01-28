@@ -26,11 +26,12 @@ const RidePopUp = ({ ride, onAccept, onIgnore }) => {
       </div>
 
       <button
-        onClick={onAccept}
+        onClick={() => onAccept(ride)}
         className="w-full bg-green-600 text-white py-3 rounded-xl font-semibold mb-3"
       >
         Accept
       </button>
+
 
       <button
         onClick={onIgnore}
