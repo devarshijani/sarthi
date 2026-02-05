@@ -1,7 +1,7 @@
 const { validationResult } = require("express-validator");
 const rideService = require("../services/ride.service");
 const mapsService = require("../services/maps.service");
-const { sendMessageToSocketId } = require("../socket");
+const { sendMessageToSocketId } = require("../socket.js");
 const rideModel = require("../models/ride.model");
 
 module.exports.createRide = async (req, res) => {
@@ -39,7 +39,7 @@ module.exports.createRide = async (req, res) => {
         const captainsInRadius = await mapsService.getCaptainInRadius(
             pickupCoords.lat,
             pickupCoords.lng,
-            300 // 🔥 increased radius for reliability
+            5000 // 🔥 increased radius for testing
         );
 
         console.log("🚖 Captains in radius:", captainsInRadius.length);
@@ -112,3 +112,27 @@ module.exports.fare = async (req, res) => {
         });
     }
 };
+
+// module.exports.startRide = async (req, res) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//         return res.status(400).json({ errors: errors.array() });
+//     }
+
+//     const { rideId, otp } = req.query;
+
+//     try {
+//         const ride = await rideService.startRide({ rideId, otp, captain: req.captain });
+
+//         sendMessageToSocketId(ride.user.socketId, {
+//             event: 'ride-started',
+//             data: ride
+//         })
+
+//         return res.status(200).json(ride);
+//     } catch (error) {
+//         console.log(error);
+//         return res.status(500).json({ message: "Internal server error" });
+//     }
+
+// }

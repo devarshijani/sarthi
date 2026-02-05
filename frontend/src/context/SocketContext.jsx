@@ -1,43 +1,41 @@
-import React, { createContext, useEffect, useState } from 'react';
-import { io } from 'socket.io-client';
+import React, { createContext, useEffect } from "react";
+import { io } from "socket.io-client";
 
-export const SocketDataContext = createContext();
+/**
+ * IMPORTANT:
+ * - Socket must be SINGLETON
+ * - Must NOT be tied to React re-render or route change
+ * - Must NOT disconnect on unmount
+ */
 
+export const SocketDataContext = createContext(null);
+
+/* ================= SOCKET INSTANCE (SINGLETON) ================= */
+const socket = io(import.meta.env.VITE_BACKEND_URL, {
+    transports: ["websocket"],
+    autoConnect: true,
+});
+
+/* ================= CONTEXT PROVIDER ================= */
 const SocketContext = ({ children }) => {
-    const [socket, setSocket] = useState(null);
-
     useEffect(() => {
-        const newSocket = io(import.meta.env.VITE_BACKEND_URL);
-
-        newSocket.on('connect', () => {
-            console.log('Connected to socket server');
+        socket.on("connect", () => {
+            console.log("Connected to socket server:", socket.id);
         });
 
-        newSocket.on('disconnect', () => {
-            console.log('Disconnected from socket server');
+        socket.on("disconnect", (reason) => {
+            console.log("Disconnected from socket server:", reason);
         });
-
-        setSocket(newSocket);
 
         return () => {
-            newSocket.disconnect();
+            // ⚠️ DO NOT socket.disconnect() here
+            socket.off("connect");
+            socket.off("disconnect");
         };
     }, []);
 
-    const sendMessage = (eventName, message) => {
-        if (socket) {
-            socket.emit(eventName, message);
-        }
-    };
-
-    const receiveMessage = (eventName, callback) => {
-        if (socket) {
-            socket.on(eventName, callback);
-        }
-    };
-
     return (
-        <SocketDataContext.Provider value={{ socket, sendMessage, receiveMessage }}>
+        <SocketDataContext.Provider value={{ socket }}>
             {children}
         </SocketDataContext.Provider>
     );

@@ -7,6 +7,10 @@ const rideSchema = new mongoose.Schema(
             ref: "User",
             required: true,
         },
+        captain: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Captain",
+        },
 
         pickup: {
             type: String,
@@ -62,13 +66,14 @@ const rideSchema = new mongoose.Schema(
         },
         otp: {
             type: String,
-            select: false,
-            required: true,
+            // required: true,
+            default: null,
         },
         otpExpiry: {
             type: Date,
-            default: null
-        }
+            default: null,
+        },
+
 
     },
     { timestamps: true }

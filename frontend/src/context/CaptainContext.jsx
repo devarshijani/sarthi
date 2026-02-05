@@ -1,34 +1,40 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useEffect, useState } from "react";
 
 export const CaptainDataContext = createContext();
 
-// export const useCaptain = () => useContext(CaptainContext);
+const CaptainContext = ({ children }) => {
+	const [captain, setCaptain] = useState(() => {
+		const stored = localStorage.getItem("captain");
+		return stored ? JSON.parse(stored) : null;
+	});
 
-export const CaptainContext = ({ children }) => {
-	const [captain, setCaptain] = useState(null); // Captain data (object or null)
-	const [isCaptainAuthenticated, setIsCaptainAuthenticated] = useState(false); // Auth state
+	const [activeRide, setActiveRide] = useState(() => {
+		return localStorage.getItem("activeRide") === "true";
+	});
 
-	const loginCaptain = (captainData) => {
-		setCaptain(captainData);
-		setIsCaptainAuthenticated(true);
-	};
+	/* ---------- PERSIST CAPTAIN ---------- */
+	useEffect(() => {
+		if (captain) {
+			localStorage.setItem("captain", JSON.stringify(captain));
+		} else {
+			localStorage.removeItem("captain");
+		}
+	}, [captain]);
 
-	const logoutCaptain = () => {
-		setCaptain(null);
-		setIsCaptainAuthenticated(false);
-	};
-
-	const value = {
-		captain,
-		isCaptainAuthenticated,
-		loginCaptain,
-		logoutCaptain,
-		setCaptain,
-		setIsCaptainAuthenticated,
-	};
+	/* ---------- PERSIST RIDE STATE ---------- */
+	useEffect(() => {
+		localStorage.setItem("activeRide", activeRide ? "true" : "false");
+	}, [activeRide]);
 
 	return (
-		<CaptainDataContext.Provider value={value}>
+		<CaptainDataContext.Provider
+			value={{
+				captain,
+				setCaptain,
+				activeRide,
+				setActiveRide,
+			}}
+		>
 			{children}
 		</CaptainDataContext.Provider>
 	);

@@ -1,11 +1,12 @@
 import { useContext, useEffect, useState } from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import axios from "axios";
 import { CaptainDataContext } from "../context/CaptainContext";
 
 const CaptainProtectedWrapper = () => {
-  const { setCaptain } = useContext(CaptainDataContext);
+  const { setCaptain, activeRide } = useContext(CaptainDataContext);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
   const token = localStorage.getItem("captainToken");
 
@@ -27,7 +28,14 @@ const CaptainProtectedWrapper = () => {
   }, [token, setCaptain]);
 
   if (loading) return <div>Loading...</div>;
+
+  /* ❌ NOT LOGGED IN */
   if (!token) return <Navigate to="/captain-login" replace />;
+
+  /* ✅ ALLOW ACTIVE RIDE PAGE */
+  if (activeRide && location.pathname === "/captain-dashboard") {
+    return <Navigate to="/captain-riding" replace />;
+  }
 
   return <Outlet />;
 };

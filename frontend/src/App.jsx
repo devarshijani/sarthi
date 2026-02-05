@@ -8,6 +8,7 @@ import CaptainSignup from "./pages/CaptainSignup";
 import Riding from "./pages/Riding";
 import CaptainRiding from "./pages/CaptainRiding";
 import Home from "./pages/Home";
+import 'leaflet/dist/leaflet.css';
 
 import UserProtectedWrapper from "./pages/UserProtectedWrapper";
 import UserLogout from "./pages/UserLogout";

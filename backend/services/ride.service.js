@@ -1,4 +1,5 @@
 const rideModel = require("../models/ride.model");
+const { sendMessageToSocketId } = require("../socket");
 const mapsService = require("./maps.service");
 const crypto = require("crypto");
 
@@ -117,10 +118,7 @@ module.exports.createRide = async ({
         (duration / 60) * perMinuteRate[vehicleType]
     );
 
-    module.exports.fare = fare;
-
-    // ✅ Generate OTP (PLAIN like tutorial)
-    const otp = generateOtp(5);
+    // module.exports.fare = fare;
 
     const ride = await rideModel.create({
         user,
@@ -130,9 +128,41 @@ module.exports.createRide = async ({
         distance,
         duration,
         fare,
-        otp,
+        // otp,
         status: "pending"
     });
 
     return ride;
 };
+
+// module.exports.startRide = async ({ rideId, otp, captain }) => {
+//     if (!rideId || !otp || !captain) {
+//         throw new Error("Missing required fields");
+//     }
+
+//     const ride = await rideModel.findById(rideId);
+//     if (!ride) {
+//         throw new Error("Ride not found");
+//     }
+
+//     if (ride.otp !== otp) {
+//         throw new Error("Invalid OTP");
+//     }
+
+//     await rideModel.findOneAndUpdate({
+//         _id: rideId
+//     }, {
+//         status: 'ongoing'
+//     })
+
+//     sendMessageToSocketId(ride.user.socketId, {
+//         event: 'ride-started',
+//         data: ride
+//     })
+
+//     ride.status = "started";
+//     ride.captain = captain;
+//     await ride.save();
+
+//     return ride;
+// };

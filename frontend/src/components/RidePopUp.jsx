@@ -2,7 +2,7 @@ import React from "react";
 
 const RidePopUp = ({ ride, onAccept, onIgnore }) => {
   return (
-    <div>
+    <div className="bg-white p-5 rounded-t-3xl">
       <h3 className="text-xl font-semibold mb-4">
         New Ride Available!
       </h3>

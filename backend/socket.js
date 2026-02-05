@@ -5,6 +5,7 @@ const rideModel = require("./models/ride.model");
 
 let io;
 
+/* ================= INIT SOCKET ================= */
 function initializeSocket(server) {
     io = socketIo(server, {
         cors: {
@@ -14,9 +15,9 @@ function initializeSocket(server) {
     });
 
     io.on("connection", (socket) => {
-        console.log(`🟢 New client connected: ${socket.id}`);
+        console.log("🔌 New client connected:", socket.id);
 
-        /* ================= JOIN ================= */
+        /* ========== JOIN ========== */
         socket.on("join", async ({ userId, userType }) => {
             try {
                 if (userType === "user") {
@@ -31,15 +32,18 @@ function initializeSocket(server) {
                         status: "available",
                     });
                 }
+
+                console.log(`✅ ${userType} joined: ${userId}`);
             } catch (err) {
-                console.error("JOIN ERROR:", err.message);
+                console.error("❌ join error:", err);
             }
         });
 
-        /* ========== CAPTAIN LOCATION UPDATE ========== */
+        /* ========== LOCATION UPDATE ========== */
         socket.on("update-location-captain", async ({ userId, location }) => {
-            if (!location || !location.ltd || !location.lng) return;
+            if (!location?.lng || !location?.ltd) return;
 
+            // 1️⃣ Save location in DB
             await captainModel.findByIdAndUpdate(userId, {
                 location: {
                     type: "Point",
@@ -47,49 +51,120 @@ function initializeSocket(server) {
                 },
             });
 
-            console.log("📍 Captain location updated:", userId);
+            // 2️⃣ 🔥 EMIT LIVE LOCATION (THIS WAS MISSING)
+            const ride = await rideModel.findOne({
+                captain: userId,
+                status: "ongoing",
+            }).populate("user");
+
+            if (ride?.user?.socketId) {
+                io.to(ride.user.socketId).emit("captain-location-update", {
+                    lat: location.ltd,
+                    lng: location.lng,
+                    captainId: userId,
+                });
+            }
+
         });
 
-        /* ========== ACCEPT RIDE (CRITICAL) ========== */
+
+        /* ========== ACCEPT RIDE ========== */
         socket.on("accept-ride", async ({ rideId, captainId }) => {
             try {
-                const ride = await rideModel
-                    .findById(rideId)
-                    .populate("user");
-
+                const ride = await rideModel.findById(rideId).populate("user");
                 if (!ride || ride.status !== "pending") return;
+
+                const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
                 ride.status = "accepted";
                 ride.captain = captainId;
+                ride.otp = otp;
                 await ride.save();
 
                 const captain = await captainModel.findById(captainId);
 
-                /* Notify USER */
-                if (ride.user.socketId) {
-                    io.to(ride.user.socketId).emit("ride-accepted", {
-                        ride,
-                        captain,
-                    });
+                io.to(ride.user.socketId).emit("ride-accepted", {
+                    ride: { ...ride.toObject(), otp },
+                    captain: {
+                        name: `${captain.fullName.firstName} ${captain.fullName.lastName}`,
+                        vehicle: captain.vehicle,
+                        phone: captain.phone,
+                    },
+                });
+
+                console.log("✅ Ride accepted, OTP:", otp);
+            } catch (err) {
+                console.error("❌ accept-ride error:", err);
+            }
+        });
+
+        /* ========== START RIDE (OTP VERIFY) ========== */
+        socket.on("ride-start", async ({ rideId, otp }) => {
+            try {
+                const ride = await rideModel
+                    .findById(rideId)
+                    .select("+otp")
+                    .populate("user");
+
+                if (!ride) return;
+
+                if (ride.otp !== otp) {
+                    socket.emit("otp-invalid");
+                    return;
                 }
 
-                console.log("✅ Ride accepted:", rideId);
+                ride.status = "ongoing";
+                ride.otp = null;
+                await ride.save();
+
+                io.to(ride.user.socketId).emit("ride-started", ride);
+                socket.emit("ride-started-success", ride);
+
+                console.log("🚀 Ride started");
             } catch (err) {
-                console.error("ACCEPT RIDE ERROR:", err.message);
+                console.error("❌ ride-start error:", err);
+            }
+        });
+
+        /* ========== COMPLETE RIDE ========== */
+        socket.on("complete-ride", async ({ rideId }) => {
+            try {
+                const ride = await rideModel.findById(rideId).populate("user");
+                if (!ride || ride.status !== "ongoing") return;
+
+                ride.status = "completed";
+                await ride.save();
+
+                await captainModel.findByIdAndUpdate(ride.captain, {
+                    status: "available",
+                });
+
+                io.to(ride.user.socketId).emit("ride-completed", ride);
+                socket.emit("ride-completed-success", ride);
+
+                console.log("🏁 Ride completed");
+            } catch (err) {
+                console.error("❌ complete-ride error:", err);
             }
         });
 
         socket.on("disconnect", () => {
-            console.log(`🔴 Client disconnected: ${socket.id}`);
+            console.log("❌ Disconnected:", socket.id);
         });
     });
 }
 
-/* ========== HELPER (USED ELSEWHERE) ========== */
+/* ================= SEND HELPER ================= */
 function sendMessageToSocketId(socketId, messageObject) {
-    if (!io) return;
-
+    if (!io) {
+        console.log("⚠️ Socket not initialized");
+        return;
+    }
     io.to(socketId).emit(messageObject.event, messageObject.data);
 }
 
-module.exports = { initializeSocket, sendMessageToSocketId };
+/* ================= EXPORTS ================= */
+module.exports = {
+    initializeSocket,
+    sendMessageToSocketId,
+};

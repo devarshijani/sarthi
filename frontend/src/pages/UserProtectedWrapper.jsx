@@ -18,7 +18,7 @@ const UserProtectedWrapper = () => {
       .get(`${import.meta.env.VITE_BACKEND_URL}/api/users/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((res) => setUser(res.data))
+      .then((res) => setUser(res.data.user))
       .catch(() => localStorage.removeItem("userToken"))
       .finally(() => setLoading(false));
   }, [token, setUser]);
