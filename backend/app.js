@@ -13,7 +13,10 @@ const rideRoutes = require('./routes/ride.routes');
 connectToDb();
 
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: [
+        "http://localhost:5173",
+        "https://sarthi-pied.vercel.app"
+    ],
     credentials: true
 }));
 app.use(express.json());
