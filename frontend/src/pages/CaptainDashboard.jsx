@@ -54,7 +54,17 @@ const CaptainDashboard = () => {
             },
           });
         },
-        (err) => console.error("GPS error:", err),
+        (err) => {
+          console.error("GPS error:", err);
+          // Fallback location for testing if GPS is denied
+          socket.emit("update-location-captain", {
+            captainId: captain._id,
+            location: {
+              lat: 21.1702,
+              lng: 72.8311,
+            },
+          });
+        },
         { enableHighAccuracy: true }
       );
     };

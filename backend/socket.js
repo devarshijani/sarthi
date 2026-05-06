@@ -40,28 +40,31 @@ function initializeSocket(server) {
         });
 
         /* ========== LOCATION UPDATE ========== */
-        socket.on("update-location-captain", async ({ userId, location }) => {
-            if (!location?.lng || !location?.ltd) return;
+        socket.on("update-location-captain", async ({ userId, captainId, location }) => {
+            const id = userId || captainId;
+            const lat = location?.lat || location?.ltd;
+            
+            if (!location?.lng || !lat) return;
 
             // 1️⃣ Save location in DB
-            await captainModel.findByIdAndUpdate(userId, {
+            await captainModel.findByIdAndUpdate(id, {
                 location: {
                     type: "Point",
-                    coordinates: [location.lng, location.ltd],
+                    coordinates: [location.lng, lat],
                 },
             });
 
             // 2️⃣ 🔥 EMIT LIVE LOCATION (THIS WAS MISSING)
             const ride = await rideModel.findOne({
-                captain: userId,
+                captain: id,
                 status: "ongoing",
             }).populate("user");
 
             if (ride?.user?.socketId) {
                 io.to(ride.user.socketId).emit("captain-location-update", {
-                    lat: location.ltd,
+                    lat: lat,
                     lng: location.lng,
-                    captainId: userId,
+                    captainId: id,
                 });
             }
 
