@@ -33,6 +33,27 @@ const Home = () => {
 
   const [selectedVehicle, setSelectedVehicle] = useState(null);
 
+  const [pickupCoords, setPickupCoords] = useState(null);
+  const [destinationCoords, setDestinationCoords] = useState(null);
+  const [userCoords, setUserCoords] = useState(null);
+
+  /* ================= GET USER INITIAL LOCATION ================= */
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserCoords({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.error("Error getting user initial location:", error);
+        }
+      );
+    }
+  }, []);
+
   const [locationPanelOpen, setLocationPanelOpen] = useState(false);
   const [vehiclePanelOpen, setVehiclePanelOpen] = useState(false);
   const [confirmRideOpen, setConfirmRideOpen] = useState(false);
@@ -165,7 +186,7 @@ const Home = () => {
   return (
     <div className="h-screen w-full relative overflow-hidden">
       <div className="fixed w-full h-full top-0 left-0 z-0">
-        <LiveTracking pickup={ride?.pickupCoords || { lat: 21.1702, lng: 72.8311 }} />
+        <LiveTracking pickup={ride?.pickupCoords || pickupCoords || userCoords || { lat: 21.1702, lng: 72.8311 }} />
 
 
       </div>
@@ -219,6 +240,8 @@ const Home = () => {
           destinationSuggestions={destinationSuggestions}
           fetchSuggestions={fetchSuggestions}
           setPanelOpen={setLocationPanelOpen}
+          setPickupCoords={setPickupCoords}
+          setDestinationCoords={setDestinationCoords}
         />
       </div>
 

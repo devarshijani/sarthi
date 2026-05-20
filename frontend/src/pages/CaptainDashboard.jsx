@@ -151,7 +151,7 @@ const CaptainDashboard = () => {
   return (
     <div className="h-screen w-full relative overflow-hidden bg-white">
       {/* MAP */}
-      <div className="h-1/2 w-full">
+      <div className="h-1/2 w-full relative z-0">
         <LiveTracking pickup={ride?.pickupCoords || { lat: 21.1702, lng: 72.8311 }} />
       </div>
 

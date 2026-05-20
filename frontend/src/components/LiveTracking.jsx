@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import { useEffect, useState, useContext } from "react";
 import { SocketDataContext } from "../context/SocketContext";
 import L from "leaflet";
@@ -10,6 +10,16 @@ L.Icon.Default.mergeOptions({
     iconUrl: markerIcon,
     shadowUrl: markerShadow,
 });
+
+const RecenterMap = ({ center }) => {
+    const map = useMap();
+    useEffect(() => {
+        if (center && center[0] && center[1]) {
+            map.setView(center, 14);
+        }
+    }, [center, map]);
+    return null;
+};
 
 const LiveTracking = ({ pickup }) => {
     const { socket } = useContext(SocketDataContext);
@@ -42,6 +52,8 @@ const LiveTracking = ({ pickup }) => {
             style={{ height: "100%", width: "100%" }}
         >
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            <RecenterMap center={[pickup.lat, pickup.lng]} />
+            <Marker position={[pickup.lat, pickup.lng]} />
             {captainPosition && <Marker position={captainPosition} />}
             {route.length > 1 && <Polyline positions={route} />}
         </MapContainer>

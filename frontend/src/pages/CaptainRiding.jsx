@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import gsap from "gsap";
+import axios from "axios";
 import FinishRide from "./FinishRide";
 import LiveTracking from "../components/LiveTracking";
 import logo from "../assets/logo.png";
@@ -10,6 +11,7 @@ import { CaptainDataContext } from "../context/CaptainContext";
 const CaptainRiding = () => {
   const panelRef = useRef(null);
   const [panelOpen, setPanelOpen] = useState(true);
+  const [coords, setCoords] = useState(null);
 
   const { socket } = useContext(SocketDataContext);
   const { activeRide } = useContext(CaptainDataContext);
@@ -24,6 +26,34 @@ const CaptainRiding = () => {
     null;
 
   const captain = JSON.parse(localStorage.getItem("captain"));
+
+  /* ================= RESOLVE COORDINATES ================= */
+  useEffect(() => {
+    if (!ride) return;
+
+    if (ride.pickupCoords && ride.pickupCoords.lat && ride.pickupCoords.lng) {
+      setCoords(ride.pickupCoords);
+    } else if (ride.pickup) {
+      axios
+        .get(`${import.meta.env.VITE_BASE_URL}/api/maps/get-coordinates`, {
+          params: { address: ride.pickup },
+          withCredentials: true,
+        })
+        .then((res) => {
+          if (res.data && res.data.lat && res.data.lng) {
+            setCoords({ lat: Number(res.data.lat), lng: Number(res.data.lng) });
+          } else {
+            setCoords({ lat: 21.1702, lng: 72.8311 });
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to geocode pickup address:", err);
+          setCoords({ lat: 21.1702, lng: 72.8311 });
+        });
+    } else {
+      setCoords({ lat: 21.1702, lng: 72.8311 });
+    }
+  }, [ride]);
 
   /* ================= PERSIST RIDE ================= */
   useEffect(() => {
@@ -96,7 +126,18 @@ const CaptainRiding = () => {
       />
 
       {/* MAP */}
-      <LiveTracking pickup={ride.pickupCoords} />
+      <div className="fixed w-full h-full top-0 left-0 z-0">
+        {coords ? (
+          <LiveTracking pickup={coords} />
+        ) : (
+          <div className="w-full h-full bg-gray-50 flex items-center justify-center">
+            <div className="text-center">
+              <i className="ri-loader-4-line text-4xl text-blue-500 animate-spin mb-2 block"></i>
+              <p className="text-sm text-gray-500 font-semibold">Loading map coordinates...</p>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* SLIDING PANEL */}
       <div
