@@ -24,4 +24,10 @@ router.get('/get-suggestions',
     mapController.getAutoCompleteSuggestions
 )
 
+router.get('/reverse-geocode',
+    query('lat').isFloat(),
+    query('lng').isFloat(),
+    mapController.reverseGeocode
+)
+
 module.exports = router;

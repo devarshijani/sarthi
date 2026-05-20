@@ -65,3 +65,23 @@ module.exports.getAutoCompleteSuggestions = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// ======================
+// REVERSE GEOCODE CONTROLLER
+// ======================
+module.exports.reverseGeocode = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        const { lat, lng } = req.query;
+
+        const address = await mapsService.getReverseGeocode(lat, lng);
+
+        res.status(200).json(address);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
