@@ -9,16 +9,15 @@ module.exports.getAddressCoordinate = async (address) => {
             "https://nominatim.openstreetmap.org/search",
             {
                 params: {
-                    q: address,
+                    q: input,
                     format: "json",
-                    limit: 3,
                     addressdetails: 1,
-                    countrycodes: "in",   // 🇮🇳 VERY IMPORTANT
+                    limit: 5,
+                    countrycodes: "in"
                 },
-
                 headers: {
-                    "User-Agent": "sarthi-app",
-                },
+                    "User-Agent": "sarthi-app/1.0 (janidevarshi8@gmail.com)"
+                }
             }
         );
 
@@ -40,7 +39,7 @@ module.exports.getAddressCoordinate = async (address) => {
                                 countrycodes: "in",
                             },
                             headers: {
-                                "User-Agent": "sarthi-app",
+                                "User-Agent": "sarthi-app/1.0 (janidevarshi8@gmail.com)"
                             },
                         }
                     );
@@ -89,7 +88,7 @@ module.exports.getReverseGeocode = async (lat, lng) => {
                     format: "json",
                 },
                 headers: {
-                    "User-Agent": "sarthi-app",
+                    "User-Agent": "sarthi-app/1.0 (janidevarshi8@gmail.com)"
                 },
             }
         );
@@ -195,7 +194,7 @@ module.exports.getAutoCompleteSuggestions = async (input) => {
                     limit: 5
                 },
                 headers: {
-                    "User-Agent": "sarthi-app"
+                    "User-Agent": "sarthi-app/1.0 (janidevarshi8@gmail.com)"
                 }
             }
         );
