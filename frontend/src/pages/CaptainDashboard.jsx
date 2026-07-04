@@ -130,10 +130,14 @@ const CaptainDashboard = () => {
 
     socket.on("ride-started-success", onRideStarted);
     socket.on("otp-invalid", () => alert("❌ Invalid OTP"));
+    socket.on("otp-expired", () => alert("❌ OTP expired — ask the rider to request again"));
+    socket.on("otp-locked", () => alert("❌ Too many wrong attempts — ride locked"));
 
     return () => {
       socket.off("ride-started-success", onRideStarted);
       socket.off("otp-invalid");
+      socket.off("otp-expired");
+      socket.off("otp-locked");
     };
   }, [socket, navigate]);
 

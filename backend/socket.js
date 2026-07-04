@@ -1,5 +1,6 @@
 const socketIo = require("socket.io");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const userModel = require("./models/user.model");
 const captainModel = require("./models/captain.model");
 const rideModel = require("./models/ride.model");
@@ -8,9 +9,16 @@ let io;
 
 /* ================= INIT SOCKET ================= */
 function initializeSocket(server) {
+    const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http://localhost:5173,https://sarthi-pied.vercel.app").split(",").map(s => s.trim());
     io = socketIo(server, {
         cors: {
-            origin: "*",
+            origin: function (origin, callback) {
+                if (!origin || allowedOrigins.includes(origin)) {
+                    callback(null, true);
+                } else {
+                    callback(new Error('Not allowed by CORS'));
+                }
+            },
             methods: ["GET", "POST"],
         },
     });
@@ -110,11 +118,13 @@ function initializeSocket(server) {
                 const ride = await rideModel.findById(rideId).populate("user");
                 if (!ride || ride.status !== "pending") return;
 
-                const otp = Math.floor(1000 + Math.random() * 9000).toString();
+                const otp = crypto.randomInt(100000, 1000000).toString();
 
                 ride.status = "accepted";
                 ride.captain = socket.userId;
                 ride.otp = otp;
+                ride.otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+                ride.otpAttempts = 0;
                 await ride.save();
 
                 const captain = await captainModel.findById(socket.userId);
@@ -150,11 +160,27 @@ function initializeSocket(server) {
                     return;
                 }
 
+                // (a) if ride.otpExpiry && ride.otpExpiry < new Date(), emit "otp-expired" to the socket and return;
+                if (ride.otpExpiry && ride.otpExpiry < new Date()) {
+                    socket.emit("otp-expired");
+                    return;
+                }
+
+                // (b) if ride.otpAttempts >= 5, emit "otp-locked" to the socket and return;
+                if (ride.otpAttempts >= 5) {
+                    socket.emit("otp-locked");
+                    return;
+                }
+
+                // (c) if the OTP does not match, increment ride.otpAttempts, save, emit the existing "otp-invalid", and return;
                 if (ride.otp !== otp) {
+                    ride.otpAttempts = (ride.otpAttempts || 0) + 1;
+                    await ride.save();
                     socket.emit("otp-invalid");
                     return;
                 }
 
+                // (d) on match, proceed exactly as now (status "ongoing", clear otp, emit "ride-started" / "ride-started-success")
                 ride.status = "ongoing";
                 ride.otp = null;
                 await ride.save();

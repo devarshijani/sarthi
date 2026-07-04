@@ -12,13 +12,10 @@ const rideRoutes = require('./routes/ride.routes');
 
 connectToDb();
 
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http://localhost:5173,https://sarthi-pied.vercel.app").split(",").map(s => s.trim());
 app.use(cors({
     origin: function (origin, callback) {
-        const allowedOrigins = [
-            "http://localhost:5173",
-            "https://sarthi-pied.vercel.app"
-        ];
-        if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+        if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
