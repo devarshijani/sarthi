@@ -109,7 +109,7 @@ const Home = () => {
     setLocationPanelOpen(false);
 
     const res = await axios.get(
-      `${import.meta.env.VITE_BASE_URL}/rides/fare`,
+      `${import.meta.env.VITE_BASE_URL}/api/rides/fare`,
       { params: { pickup, destination }, withCredentials: true }
     );
 

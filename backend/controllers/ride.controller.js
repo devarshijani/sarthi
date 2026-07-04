@@ -39,7 +39,7 @@ module.exports.createRide = async (req, res) => {
         const captainsInRadius = await mapsService.getCaptainInRadius(
             pickupCoords.lat,
             pickupCoords.lng,
-            5000 // 🔥 increased radius for testing
+            5
         );
 
         console.log("🚖 Captains in radius:", captainsInRadius.length);

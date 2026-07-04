@@ -15,7 +15,7 @@ const ConfirmedRide = ({
 
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/rides/create`,
+        `${import.meta.env.VITE_BASE_URL}/api/rides/create`,
         {
           pickup,
           destination,
