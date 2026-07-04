@@ -1,4 +1,5 @@
 const socketIo = require("socket.io");
+const jwt = require("jsonwebtoken");
 const userModel = require("./models/user.model");
 const captainModel = require("./models/captain.model");
 const rideModel = require("./models/ride.model");
@@ -14,34 +15,66 @@ function initializeSocket(server) {
         },
     });
 
+    io.use(async (socket, next) => {
+        try {
+            const token = socket.handshake.auth?.token;
+            if (!token) {
+                return next(new Error("Unauthorized"));
+            }
+
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            
+            if (decoded.role === "captain") {
+                const captain = await captainModel.findById(decoded.id);
+                if (!captain) {
+                    return next(new Error("Unauthorized"));
+                }
+                socket.userId = captain._id.toString();
+                socket.userType = "captain";
+            } else {
+                const user = await userModel.findById(decoded._id);
+                if (!user) {
+                    return next(new Error("Unauthorized"));
+                }
+                socket.userId = user._id.toString();
+                socket.userType = "user";
+            }
+            next();
+        } catch (err) {
+            console.error("Socket authentication error:", err.message);
+            next(new Error("Unauthorized"));
+        }
+    });
+
     io.on("connection", (socket) => {
         console.log("🔌 New client connected:", socket.id);
 
         /* ========== JOIN ========== */
-        socket.on("join", async ({ userId, userType }) => {
+        socket.on("join", async () => {
             try {
-                if (userType === "user") {
-                    await userModel.findByIdAndUpdate(userId, {
+                if (socket.userType === "user") {
+                    await userModel.findByIdAndUpdate(socket.userId, {
                         socketId: socket.id,
                     });
                 }
 
-                if (userType === "captain") {
-                    await captainModel.findByIdAndUpdate(userId, {
+                if (socket.userType === "captain") {
+                    await captainModel.findByIdAndUpdate(socket.userId, {
                         socketId: socket.id,
                         status: "available",
                     });
                 }
 
-                console.log(`✅ ${userType} joined: ${userId}`);
+                console.log(`✅ ${socket.userType} joined: ${socket.userId}`);
             } catch (err) {
                 console.error("❌ join error:", err);
             }
         });
 
         /* ========== LOCATION UPDATE ========== */
-        socket.on("update-location-captain", async ({ userId, captainId, location }) => {
-            const id = userId || captainId;
+        socket.on("update-location-captain", async ({ location }) => {
+            if (socket.userType !== "captain") return;
+            const id = socket.userId;
             const lat = location?.lat || location?.ltd;
             
             if (!location?.lng || !lat) return;
@@ -54,7 +87,7 @@ function initializeSocket(server) {
                 },
             });
 
-            // 2️⃣ 🔥 EMIT LIVE LOCATION (THIS WAS MISSING)
+            // 2️⃣ 🔥 EMIT LIVE LOCATION
             const ride = await rideModel.findOne({
                 captain: id,
                 status: "ongoing",
@@ -67,24 +100,24 @@ function initializeSocket(server) {
                     captainId: id,
                 });
             }
-
         });
 
 
         /* ========== ACCEPT RIDE ========== */
-        socket.on("accept-ride", async ({ rideId, captainId }) => {
+        socket.on("accept-ride", async ({ rideId }) => {
             try {
+                if (socket.userType !== "captain") return;
                 const ride = await rideModel.findById(rideId).populate("user");
                 if (!ride || ride.status !== "pending") return;
 
                 const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
                 ride.status = "accepted";
-                ride.captain = captainId;
+                ride.captain = socket.userId;
                 ride.otp = otp;
                 await ride.save();
 
-                const captain = await captainModel.findById(captainId);
+                const captain = await captainModel.findById(socket.userId);
 
                 io.to(ride.user.socketId).emit("ride-accepted", {
                     ride: { ...ride.toObject(), otp },
@@ -104,12 +137,18 @@ function initializeSocket(server) {
         /* ========== START RIDE (OTP VERIFY) ========== */
         socket.on("ride-start", async ({ rideId, otp }) => {
             try {
+                if (socket.userType !== "captain") return;
                 const ride = await rideModel
                     .findById(rideId)
                     .select("+otp")
                     .populate("user");
 
                 if (!ride) return;
+
+                if (ride.captain?.toString() !== socket.userId) {
+                    socket.emit("unauthorized");
+                    return;
+                }
 
                 if (ride.otp !== otp) {
                     socket.emit("otp-invalid");
@@ -132,8 +171,14 @@ function initializeSocket(server) {
         /* ========== COMPLETE RIDE ========== */
         socket.on("complete-ride", async ({ rideId }) => {
             try {
+                if (socket.userType !== "captain") return;
                 const ride = await rideModel.findById(rideId).populate("user");
                 if (!ride || ride.status !== "ongoing") return;
+
+                if (ride.captain?.toString() !== socket.userId) {
+                    socket.emit("unauthorized");
+                    return;
+                }
 
                 ride.status = "completed";
                 await ride.save();

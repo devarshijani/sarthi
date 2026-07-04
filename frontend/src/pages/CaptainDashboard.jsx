@@ -9,6 +9,7 @@ import ConfirmRidePopUp from "../components/ConfirmRidePopUp";
 
 import { SocketDataContext } from "../context/SocketContext";
 import { CaptainDataContext } from "../context/CaptainContext";
+import { connectSocket } from "../socket";
 
 const CaptainDashboard = () => {
   const ridePopupRef = useRef(null);
@@ -26,6 +27,8 @@ const CaptainDashboard = () => {
   useEffect(() => {
     if (!socket || !captain?._id) return;
 
+    connectSocket();
+
     const join = () => {
       socket.emit("join", {
         userType: "captain",
@@ -33,8 +36,11 @@ const CaptainDashboard = () => {
       });
     };
 
-    join();
-    socket.on("connect", join);
+    if (socket.connected) {
+      join();
+    } else {
+      socket.on("connect", join);
+    }
 
     return () => socket.off("connect", join);
   }, [socket, captain?._id]);

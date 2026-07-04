@@ -1,5 +1,5 @@
 import React, { createContext, useEffect } from "react";
-import { io } from "socket.io-client";
+import socket, { connectSocket } from "../socket";
 
 /**
  * IMPORTANT:
@@ -10,15 +10,14 @@ import { io } from "socket.io-client";
 
 export const SocketDataContext = createContext(null);
 
-/* ================= SOCKET INSTANCE (SINGLETON) ================= */
-const socket = io(import.meta.env.VITE_BACKEND_URL, {
-    transports: ["websocket"],
-    autoConnect: true,
-});
-
 /* ================= CONTEXT PROVIDER ================= */
 const SocketContext = ({ children }) => {
     useEffect(() => {
+        const token = localStorage.getItem("captainToken") || localStorage.getItem("userToken");
+        if (token) {
+            connectSocket();
+        }
+
         socket.on("connect", () => {
             console.log("Connected to socket server:", socket.id);
         });
