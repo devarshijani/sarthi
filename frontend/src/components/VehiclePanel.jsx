@@ -42,7 +42,7 @@ const VehiclePanel = ({ setVehiclePanel, setConfirmRideOpen, setSelectedVehicle,
       </div>
 
       <div
-        onClick={() => handleVehicleSelect({ name: "Moto", price: `₹${fare.moto || 0}`, image: "🏍️", capacity: "1 seat", time: "3 mins away" })}
+        onClick={() => handleVehicleSelect({ name: "Moto", price: `₹${fare.bike || 0}`, image: "🏍️", capacity: "1 seat", time: "3 mins away" })}
         className="flex justify-between items-center p-4 border-2 rounded-xl mb-3 cursor-pointer hover:border-black transition-all"
       >
         <div className="flex items-center gap-4">
@@ -52,7 +52,7 @@ const VehiclePanel = ({ setVehiclePanel, setConfirmRideOpen, setSelectedVehicle,
             <p className="text-sm text-gray-600">3 mins away • 1 seat</p>
           </div>
         </div>
-        <span className="font-bold text-lg">₹{fare.moto || 0}</span>
+        <span className="font-bold text-lg">₹{fare.bike || 0}</span>
       </div>
 
       <div

@@ -50,7 +50,7 @@ app.get('/', (req, res) => {
 app.use('/api/users', userRoutes);
 app.use('/api/captains', captainRoutes);
 app.use('/api/maps', mapRoutes);
-app.use('/rides', rideRoutes);
+app.use('/api/rides', rideRoutes);
 
 // 404 handler for unmatched routes
 app.use((req, res, next) => {

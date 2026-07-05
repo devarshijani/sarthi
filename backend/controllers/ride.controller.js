@@ -37,7 +37,7 @@ module.exports.createRide = async (req, res) => {
         const captainsInRadius = await mapsService.getCaptainInRadius(
             pickupCoords.lat,
             pickupCoords.lng,
-            5000 // 🔥 increased radius for testing
+            5
         );
 
         // 5️⃣ Populate user for socket payload
