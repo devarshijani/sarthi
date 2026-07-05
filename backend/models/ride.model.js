@@ -48,22 +48,6 @@ const rideSchema = new mongoose.Schema(
             enum: ["pending", "accepted", "ongoing", "completed", "cancelled"],
             default: "pending",
         },
-
-        // 🔽 PAYMENT FIELDS (OPTIONAL – FILLED LATER)
-        orderId: {
-            type: String,
-            default: null,
-        },
-
-        paymentId: {
-            type: String,
-            default: null,
-        },
-
-        signature: {
-            type: String,
-            default: null,
-        },
         otp: {
             type: String,
             // required: true,
@@ -72,6 +56,10 @@ const rideSchema = new mongoose.Schema(
         otpExpiry: {
             type: Date,
             default: null,
+        },
+        otpAttempts: {
+            type: Number,
+            default: 0,
         },
 
 

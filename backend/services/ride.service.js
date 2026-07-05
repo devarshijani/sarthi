@@ -1,16 +1,7 @@
 const rideModel = require("../models/ride.model");
 const { sendMessageToSocketId } = require("../socket");
 const mapsService = require("./maps.service");
-const crypto = require("crypto");
 
-// ======================
-// OTP GENERATOR (PLAIN)
-// ======================
-function generateOtp(length = 5) {
-    const min = Math.pow(10, length - 1);
-    const max = Math.pow(10, length) - 1;
-    return crypto.randomInt(min, max + 1).toString();
-}
 
 // ======================
 // GET FARE
@@ -115,8 +106,6 @@ module.exports.createRide = async ({
         (duration / 60) * perMinuteRate[vehicleType]
     );
 
-    // module.exports.fare = fare;
-
     const ride = await rideModel.create({
         user,
         pickup,
@@ -125,41 +114,10 @@ module.exports.createRide = async ({
         distance,
         duration,
         fare,
-        // otp,
         status: "pending"
     });
 
     return ride;
 };
 
-// module.exports.startRide = async ({ rideId, otp, captain }) => {
-//     if (!rideId || !otp || !captain) {
-//         throw new Error("Missing required fields");
-//     }
 
-//     const ride = await rideModel.findById(rideId);
-//     if (!ride) {
-//         throw new Error("Ride not found");
-//     }
-
-//     if (ride.otp !== otp) {
-//         throw new Error("Invalid OTP");
-//     }
-
-//     await rideModel.findOneAndUpdate({
-//         _id: rideId
-//     }, {
-//         status: 'ongoing'
-//     })
-
-//     sendMessageToSocketId(ride.user.socketId, {
-//         event: 'ride-started',
-//         data: ride
-//     })
-
-//     ride.status = "started";
-//     ride.captain = captain;
-//     await ride.save();
-
-//     return ride;
-// };

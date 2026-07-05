@@ -1,3 +1,9 @@
+const dotenv = require('dotenv');
+dotenv.config();
+
+const validateEnv = require('./config/validateEnv');
+validateEnv();
+
 const http = require('http');
 const app = require('./app');
 const { initializeSocket } = require('./socket');

@@ -82,6 +82,4 @@ captainSchema.methods.generateAuthToken = function () {
 
 captainSchema.index({ location: "2dsphere" });
 
-// const captainModel = mongoose.model('Captain', captainSchema);
-
 module.exports = mongoose.model('Captain', captainSchema);

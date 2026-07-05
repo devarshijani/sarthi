@@ -15,6 +15,7 @@ import WaitingForDriver from "../components/WaitingForDriver";
 
 import { SocketDataContext } from "../context/SocketContext";
 import { UserDataContext } from "../context/UserContext";
+import { connectSocket } from "../socket";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -64,6 +65,8 @@ const Home = () => {
   useEffect(() => {
     if (!socket || !user?._id) return;
 
+    connectSocket();
+
     const join = () => {
       socket.emit("join", {
         userType: "user",
@@ -71,8 +74,11 @@ const Home = () => {
       });
     };
 
-    join();
-    socket.on("connect", join);
+    if (socket.connected) {
+      join();
+    } else {
+      socket.on("connect", join);
+    }
 
     return () => {
       socket.off("connect", join);

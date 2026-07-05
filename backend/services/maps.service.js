@@ -17,7 +17,6 @@ module.exports.getAddressCoordinate = async (address) => {
             if (parts.length > 2) {
                 const simplified = parts.slice(-2).join(",").trim();
                 if (simplified !== address) {
-                    console.log(`⚠️ Geocoding failed for "${address}", trying simplified: "${simplified}"`);
                     const fbResponse = await axios.get(
                         `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(simplified)}.json`,
                         { params: { access_token: MAPBOX_TOKEN, country: "in", limit: 1 } }
@@ -30,7 +29,6 @@ module.exports.getAddressCoordinate = async (address) => {
             }
 
             // Absolute fallback: default Surat coordinates
-            console.log(`❌ Geocoding failed completely for "${address}". Falling back to Surat.`);
             return { lat: 21.1702, lng: 72.8311 };
         }
 

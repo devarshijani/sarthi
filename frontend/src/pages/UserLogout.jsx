@@ -1,6 +1,7 @@
 import React from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom';
+import { disconnectSocket } from '../socket';
 
 const userLogout = () => {
 
@@ -14,6 +15,7 @@ const userLogout = () => {
     }).then((response) => {
         if(response.status === 200){
             localStorage.removeItem("userToken");
+            disconnectSocket();
             navigate("/login");
         }
     })

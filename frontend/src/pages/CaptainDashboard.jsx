@@ -9,6 +9,7 @@ import ConfirmRidePopUp from "../components/ConfirmRidePopUp";
 
 import { SocketDataContext } from "../context/SocketContext";
 import { CaptainDataContext } from "../context/CaptainContext";
+import { connectSocket } from "../socket";
 
 const CaptainDashboard = () => {
   const ridePopupRef = useRef(null);
@@ -26,6 +27,8 @@ const CaptainDashboard = () => {
   useEffect(() => {
     if (!socket || !captain?._id) return;
 
+    connectSocket();
+
     const join = () => {
       socket.emit("join", {
         userType: "captain",
@@ -33,8 +36,11 @@ const CaptainDashboard = () => {
       });
     };
 
-    join();
-    socket.on("connect", join);
+    if (socket.connected) {
+      join();
+    } else {
+      socket.on("connect", join);
+    }
 
     return () => socket.off("connect", join);
   }, [socket, captain?._id]);
@@ -114,7 +120,6 @@ const CaptainDashboard = () => {
     if (!socket) return;
 
     const onRideStarted = (rideData) => {
-      console.log("🚀 Ride officially started");
       setRideStage("IDLE");
       setRide(null);
 
@@ -124,10 +129,14 @@ const CaptainDashboard = () => {
 
     socket.on("ride-started-success", onRideStarted);
     socket.on("otp-invalid", () => alert("❌ Invalid OTP"));
+    socket.on("otp-expired", () => alert("❌ OTP expired — ask the rider to request again"));
+    socket.on("otp-locked", () => alert("❌ Too many wrong attempts — ride locked"));
 
     return () => {
       socket.off("ride-started-success", onRideStarted);
       socket.off("otp-invalid");
+      socket.off("otp-expired");
+      socket.off("otp-locked");
     };
   }, [socket, navigate]);
 

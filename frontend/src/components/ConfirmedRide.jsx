@@ -33,14 +33,12 @@ const ConfirmedRide = ({
         }
       );
 
-      console.log("✅ Ride created:", res.data);
-
       // ✅ CRITICAL UI FLOW
       setConfirmRideOpen(false);
       setLookingForDriverOpen(true);
 
     } catch (err) {
-      console.error("❌ Ride creation failed:", err);
+      console.error("Ride creation failed:", err);
     }
   };
 

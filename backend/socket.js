@@ -1,4 +1,6 @@
 const socketIo = require("socket.io");
+const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const userModel = require("./models/user.model");
 const captainModel = require("./models/captain.model");
 const rideModel = require("./models/ride.model");
@@ -7,41 +9,77 @@ let io;
 
 /* ================= INIT SOCKET ================= */
 function initializeSocket(server) {
+    const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http://localhost:5173,https://sarthi-pied.vercel.app").split(",").map(s => s.trim());
     io = socketIo(server, {
         cors: {
-            origin: "*",
+            origin: function (origin, callback) {
+                if (!origin || allowedOrigins.includes(origin)) {
+                    callback(null, true);
+                } else {
+                    callback(new Error('Not allowed by CORS'));
+                }
+            },
             methods: ["GET", "POST"],
         },
     });
 
+    io.use(async (socket, next) => {
+        try {
+            const token = socket.handshake.auth?.token;
+            if (!token) {
+                return next(new Error("Unauthorized"));
+            }
+
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            
+            if (decoded.role === "captain") {
+                const captain = await captainModel.findById(decoded.id);
+                if (!captain) {
+                    return next(new Error("Unauthorized"));
+                }
+                socket.userId = captain._id.toString();
+                socket.userType = "captain";
+            } else {
+                const user = await userModel.findById(decoded._id);
+                if (!user) {
+                    return next(new Error("Unauthorized"));
+                }
+                socket.userId = user._id.toString();
+                socket.userType = "user";
+            }
+            next();
+        } catch (err) {
+            console.error("Socket authentication error:", err.message);
+            next(new Error("Unauthorized"));
+        }
+    });
+
     io.on("connection", (socket) => {
-        console.log("🔌 New client connected:", socket.id);
 
         /* ========== JOIN ========== */
-        socket.on("join", async ({ userId, userType }) => {
+        socket.on("join", async () => {
             try {
-                if (userType === "user") {
-                    await userModel.findByIdAndUpdate(userId, {
+                if (socket.userType === "user") {
+                    await userModel.findByIdAndUpdate(socket.userId, {
                         socketId: socket.id,
                     });
                 }
 
-                if (userType === "captain") {
-                    await captainModel.findByIdAndUpdate(userId, {
+                if (socket.userType === "captain") {
+                    await captainModel.findByIdAndUpdate(socket.userId, {
                         socketId: socket.id,
                         status: "available",
                     });
                 }
-
-                console.log(`✅ ${userType} joined: ${userId}`);
             } catch (err) {
-                console.error("❌ join error:", err);
+                console.error("join error:", err);
             }
         });
 
         /* ========== LOCATION UPDATE ========== */
-        socket.on("update-location-captain", async ({ userId, captainId, location }) => {
-            const id = userId || captainId;
+        socket.on("update-location-captain", async ({ location }) => {
+            if (socket.userType !== "captain") return;
+            const id = socket.userId;
             const lat = location?.lat || location?.ltd;
             
             if (!location?.lng || !lat) return;
@@ -54,7 +92,7 @@ function initializeSocket(server) {
                 },
             });
 
-            // 2️⃣ 🔥 EMIT LIVE LOCATION (THIS WAS MISSING)
+            // 2️⃣ 🔥 EMIT LIVE LOCATION
             const ride = await rideModel.findOne({
                 captain: id,
                 status: "ongoing",
@@ -67,24 +105,26 @@ function initializeSocket(server) {
                     captainId: id,
                 });
             }
-
         });
 
 
         /* ========== ACCEPT RIDE ========== */
-        socket.on("accept-ride", async ({ rideId, captainId }) => {
+        socket.on("accept-ride", async ({ rideId }) => {
             try {
+                if (socket.userType !== "captain") return;
                 const ride = await rideModel.findById(rideId).populate("user");
                 if (!ride || ride.status !== "pending") return;
 
-                const otp = Math.floor(1000 + Math.random() * 9000).toString();
+                const otp = crypto.randomInt(100000, 1000000).toString();
 
                 ride.status = "accepted";
-                ride.captain = captainId;
+                ride.captain = socket.userId;
                 ride.otp = otp;
+                ride.otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+                ride.otpAttempts = 0;
                 await ride.save();
 
-                const captain = await captainModel.findById(captainId);
+                const captain = await captainModel.findById(socket.userId);
 
                 io.to(ride.user.socketId).emit("ride-accepted", {
                     ride: { ...ride.toObject(), otp },
@@ -95,15 +135,15 @@ function initializeSocket(server) {
                     },
                 });
 
-                console.log("✅ Ride accepted, OTP:", otp);
             } catch (err) {
-                console.error("❌ accept-ride error:", err);
+                console.error("accept-ride error:", err);
             }
         });
 
         /* ========== START RIDE (OTP VERIFY) ========== */
         socket.on("ride-start", async ({ rideId, otp }) => {
             try {
+                if (socket.userType !== "captain") return;
                 const ride = await rideModel
                     .findById(rideId)
                     .select("+otp")
@@ -111,11 +151,32 @@ function initializeSocket(server) {
 
                 if (!ride) return;
 
+                if (ride.captain?.toString() !== socket.userId) {
+                    socket.emit("unauthorized");
+                    return;
+                }
+
+                // (a) if ride.otpExpiry && ride.otpExpiry < new Date(), emit "otp-expired" to the socket and return;
+                if (ride.otpExpiry && ride.otpExpiry < new Date()) {
+                    socket.emit("otp-expired");
+                    return;
+                }
+
+                // (b) if ride.otpAttempts >= 5, emit "otp-locked" to the socket and return;
+                if (ride.otpAttempts >= 5) {
+                    socket.emit("otp-locked");
+                    return;
+                }
+
+                // (c) if the OTP does not match, increment ride.otpAttempts, save, emit the existing "otp-invalid", and return;
                 if (ride.otp !== otp) {
+                    ride.otpAttempts = (ride.otpAttempts || 0) + 1;
+                    await ride.save();
                     socket.emit("otp-invalid");
                     return;
                 }
 
+                // (d) on match, proceed exactly as now (status "ongoing", clear otp, emit "ride-started" / "ride-started-success")
                 ride.status = "ongoing";
                 ride.otp = null;
                 await ride.save();
@@ -123,17 +184,22 @@ function initializeSocket(server) {
                 io.to(ride.user.socketId).emit("ride-started", ride);
                 socket.emit("ride-started-success", ride);
 
-                console.log("🚀 Ride started");
             } catch (err) {
-                console.error("❌ ride-start error:", err);
+                console.error("ride-start error:", err);
             }
         });
 
         /* ========== COMPLETE RIDE ========== */
         socket.on("complete-ride", async ({ rideId }) => {
             try {
+                if (socket.userType !== "captain") return;
                 const ride = await rideModel.findById(rideId).populate("user");
                 if (!ride || ride.status !== "ongoing") return;
+
+                if (ride.captain?.toString() !== socket.userId) {
+                    socket.emit("unauthorized");
+                    return;
+                }
 
                 ride.status = "completed";
                 await ride.save();
@@ -145,22 +211,17 @@ function initializeSocket(server) {
                 io.to(ride.user.socketId).emit("ride-completed", ride);
                 socket.emit("ride-completed-success", ride);
 
-                console.log("🏁 Ride completed");
             } catch (err) {
-                console.error("❌ complete-ride error:", err);
+                console.error("complete-ride error:", err);
             }
         });
 
-        socket.on("disconnect", () => {
-            console.log("❌ Disconnected:", socket.id);
-        });
     });
 }
 
 /* ================= SEND HELPER ================= */
 function sendMessageToSocketId(socketId, messageObject) {
     if (!io) {
-        console.log("⚠️ Socket not initialized");
         return;
     }
     io.to(socketId).emit(messageObject.event, messageObject.data);
