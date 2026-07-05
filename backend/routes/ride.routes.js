@@ -3,7 +3,6 @@ const router = express.Router();
 const { body, query } = require("express-validator");
 const rideController = require("../controllers/ride.controller");
 const { authUser } = require("../middlewares/auth.middleware");
-const authMiddleware = require("../middlewares/auth.middleware");
 
 router.post(
     "/create",
@@ -21,11 +20,5 @@ router.get(
     rideController.fare
 );
 
-// router.get('start-ride',
-//     authMiddleware.authCaptain,
-//     query('rideId').isMongoId().withMessage('Invalid ride ID'),
-//     query('otp').isLength({ min: 6, max: 6 }).withMessage('Invalid OTP'),
-//     rideController.startRide
-// )
 
 module.exports = router;

@@ -18,18 +18,8 @@ const SocketContext = ({ children }) => {
             connectSocket();
         }
 
-        socket.on("connect", () => {
-            console.log("Connected to socket server:", socket.id);
-        });
-
-        socket.on("disconnect", (reason) => {
-            console.log("Disconnected from socket server:", reason);
-        });
-
         return () => {
             // ⚠️ DO NOT socket.disconnect() here
-            socket.off("connect");
-            socket.off("disconnect");
         };
     }, []);
 

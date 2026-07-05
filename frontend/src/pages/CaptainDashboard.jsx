@@ -120,7 +120,6 @@ const CaptainDashboard = () => {
     if (!socket) return;
 
     const onRideStarted = (rideData) => {
-      console.log("🚀 Ride officially started");
       setRideStage("IDLE");
       setRide(null);
 

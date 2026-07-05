@@ -55,7 +55,6 @@ function initializeSocket(server) {
     });
 
     io.on("connection", (socket) => {
-        console.log("🔌 New client connected:", socket.id);
 
         /* ========== JOIN ========== */
         socket.on("join", async () => {
@@ -72,10 +71,8 @@ function initializeSocket(server) {
                         status: "available",
                     });
                 }
-
-                console.log(`✅ ${socket.userType} joined: ${socket.userId}`);
             } catch (err) {
-                console.error("❌ join error:", err);
+                console.error("join error:", err);
             }
         });
 
@@ -138,9 +135,8 @@ function initializeSocket(server) {
                     },
                 });
 
-                console.log("✅ Ride accepted, OTP:", otp);
             } catch (err) {
-                console.error("❌ accept-ride error:", err);
+                console.error("accept-ride error:", err);
             }
         });
 
@@ -188,9 +184,8 @@ function initializeSocket(server) {
                 io.to(ride.user.socketId).emit("ride-started", ride);
                 socket.emit("ride-started-success", ride);
 
-                console.log("🚀 Ride started");
             } catch (err) {
-                console.error("❌ ride-start error:", err);
+                console.error("ride-start error:", err);
             }
         });
 
@@ -216,22 +211,17 @@ function initializeSocket(server) {
                 io.to(ride.user.socketId).emit("ride-completed", ride);
                 socket.emit("ride-completed-success", ride);
 
-                console.log("🏁 Ride completed");
             } catch (err) {
-                console.error("❌ complete-ride error:", err);
+                console.error("complete-ride error:", err);
             }
         });
 
-        socket.on("disconnect", () => {
-            console.log("❌ Disconnected:", socket.id);
-        });
     });
 }
 
 /* ================= SEND HELPER ================= */
 function sendMessageToSocketId(socketId, messageObject) {
     if (!io) {
-        console.log("⚠️ Socket not initialized");
         return;
     }
     io.to(socketId).emit(messageObject.event, messageObject.data);
