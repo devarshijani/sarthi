@@ -9,6 +9,8 @@ import Riding from "./pages/Riding";
 import CaptainRiding from "./pages/CaptainRiding";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
+import RideHistory from "./pages/RideHistory";
+import CaptainRideHistory from "./pages/CaptainRideHistory";
 import 'leaflet/dist/leaflet.css';
 
 import UserProtectedWrapper from "./pages/UserProtectedWrapper";
@@ -33,6 +35,7 @@ const App = () => {
       <Route element={<UserProtectedWrapper />}>
         <Route path="/home" element={<Home />} />
         <Route path="/home/logout" element={<UserLogout />} />
+        <Route path="/rides" element={<RideHistory />} />
       </Route>
 
       {/* -------- CAPTAIN PROTECTED ROUTES -------- */}
@@ -41,6 +44,7 @@ const App = () => {
           path="/captain-dashboard"
           element={<CaptainDashboard />}
         />
+        <Route path="/captain-rides" element={<CaptainRideHistory />} />
       </Route>
       {/* -------- CATCH-ALL 404 ROUTE -------- */}
       <Route path="*" element={<NotFound />} />

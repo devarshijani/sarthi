@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import gsap from "gsap";
 
 import LiveTracking from "../components/LiveTracking";
@@ -196,6 +196,14 @@ const CaptainDashboard = () => {
   /* ================= RENDER ================= */
   return (
     <div className="h-screen w-full relative overflow-hidden bg-white">
+      {/* History Button */}
+      <Link
+        to="/captain-rides"
+        className="fixed right-5 top-5 h-12 w-12 bg-white flex items-center justify-center rounded-full shadow-lg z-20 hover:bg-gray-100 transition-colors"
+      >
+        <i className="ri-history-line text-xl"></i>
+      </Link>
+
       {/* MAP */}
       <div className="h-1/2 w-full relative z-0">
         <LiveTracking pickup={ride?.pickupCoords || { lat: 21.1702, lng: 72.8311 }} />

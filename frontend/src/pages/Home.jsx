@@ -1,5 +1,5 @@
 import React, { useContext, useRef, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import axios from "axios";
@@ -255,6 +255,14 @@ const Home = () => {
       </div>
 
       <img src={logo} className="w-14 absolute left-5 top-5 z-20" />
+
+      {/* History Button */}
+      <Link
+        to="/rides"
+        className="fixed right-5 top-5 h-12 w-12 bg-white flex items-center justify-center rounded-full shadow-lg z-20 hover:bg-gray-100 transition-colors"
+      >
+        <i className="ri-history-line text-xl"></i>
+      </Link>
 
       {/* FIND TRIP */}
       <div ref={findTripCardRef} className="absolute bottom-0 w-full z-20">
