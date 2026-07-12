@@ -5,6 +5,7 @@ import LiveTracking from "../components/LiveTracking";
 import logo from "../assets/logo.png";
 import { SocketDataContext } from "../context/SocketContext";
 import RatingModal from "../components/RatingModal";
+import PaymentPanel from "../components/PaymentPanel";
 
 const Riding = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const Riding = () => {
   const [coords, setCoords] = useState(null);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [ratingRideId, setRatingRideId] = useState(null);
+  const [showPaymentPanelComponent, setShowPaymentPanelComponent] = useState(false);
 
   // Fallback data for testing/refresh
   const fallbackRide = {
@@ -66,7 +68,8 @@ const Riding = () => {
     const onRideCompleted = (completedRide) => {
       if (completedRide && (completedRide._id === ride?._id || ride?._id === "dummy_ride_id")) {
         setRatingRideId(completedRide._id);
-        setShowRatingModal(true);
+        setShowPaymentPanel(false);
+        setShowPaymentPanelComponent(true);
       }
     };
 
@@ -78,8 +81,13 @@ const Riding = () => {
   }, [socket, ride]);
 
   const handlePayment = () => {
-    alert("Payment successful!");
+    setShowPaymentPanel(false);
     setRatingRideId(ride?._id);
+    setShowPaymentPanelComponent(true);
+  };
+
+  const handlePaymentSuccess = (method) => {
+    setShowPaymentPanelComponent(false);
     setShowRatingModal(true);
   };
 
@@ -226,6 +234,13 @@ const Riding = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {showPaymentPanelComponent && (
+        <PaymentPanel
+          ride={ride === fallbackRide ? { ...ride, _id: "dummy_ride_id" } : ride}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
       )}
 
       {showRatingModal && (

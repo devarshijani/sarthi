@@ -141,9 +141,22 @@ const RideHistory = () => {
                       <span className="text-green-500">■</span> {ride.destination}
                     </p>
                   </div>
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border ${getStatusBadgeClass(ride.status)} uppercase`}>
-                    {ride.status}
-                  </span>
+                  <div className="flex gap-2 items-center">
+                    {ride.status === "completed" && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold border ${
+                        ride.paymentStatus === "paid_online"
+                          ? "bg-blue-50 border-blue-200 text-blue-700"
+                          : ride.paymentStatus === "paid_cash"
+                          ? "bg-green-50 border-green-200 text-green-700"
+                          : "bg-red-50 border-red-200 text-red-700"
+                      } uppercase`}>
+                        {ride.paymentStatus === "paid_online" ? "Online" : ride.paymentStatus === "paid_cash" ? "Cash" : "Unpaid"}
+                      </span>
+                    )}
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border ${getStatusBadgeClass(ride.status)} uppercase`}>
+                      {ride.status}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="border-t pt-3 flex justify-between items-center text-sm text-gray-500">

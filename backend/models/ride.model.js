@@ -64,6 +64,19 @@ const rideSchema = new mongoose.Schema(
             maxlength: 200,
             default: null,
         },
+        paymentStatus: {
+            type: String,
+            enum: ["unpaid", "paid_cash", "paid_online"],
+            default: "unpaid",
+        },
+        razorpayOrderId: {
+            type: String,
+            default: null,
+        },
+        razorpayPaymentId: {
+            type: String,
+            default: null,
+        },
         otp: {
             type: String,
             // required: true,

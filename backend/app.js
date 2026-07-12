@@ -10,6 +10,7 @@ const userRoutes = require('./routes/user.routes');
 const captainRoutes = require('./routes/captain.routes');
 const mapRoutes = require('./routes/maps.routes');
 const rideRoutes = require('./routes/ride.routes');
+const paymentRoutes = require('./routes/payment.routes');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -51,6 +52,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/captains', captainRoutes);
 app.use('/api/maps', mapRoutes);
 app.use('/api/rides', rideRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // 404 handler for unmatched routes
 app.use((req, res, next) => {

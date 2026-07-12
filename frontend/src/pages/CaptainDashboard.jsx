@@ -153,12 +153,18 @@ const CaptainDashboard = () => {
       });
     };
 
+    const onPaymentReceived = ({ rideId, method, amount }) => {
+      const displayMethod = method === "online" ? "online, verified" : "cash";
+      alert(`₹${amount} received — ${displayMethod}`);
+    };
+
     socket.on("ride-started-success", onRideStarted);
     socket.on("otp-invalid", () => alert("❌ Invalid OTP"));
     socket.on("otp-expired", () => alert("❌ OTP expired — ask the rider to request again"));
     socket.on("otp-locked", () => alert("❌ Too many wrong attempts — ride locked"));
     socket.on("ride-cancelled", onRideCancelled);
     socket.on("ride-expired", onRideExpired);
+    socket.on("payment-received", onPaymentReceived);
 
     return () => {
       socket.off("ride-started-success", onRideStarted);
@@ -167,6 +173,7 @@ const CaptainDashboard = () => {
       socket.off("otp-locked");
       socket.off("ride-cancelled", onRideCancelled);
       socket.off("ride-expired", onRideExpired);
+      socket.off("payment-received", onPaymentReceived);
     };
   }, [socket, navigate]);
 

@@ -3,7 +3,7 @@
  * If any required variable is missing, lists them and exits with status code 1.
  */
 function validateEnv() {
-    const required = ["DB_CONNECT", "JWT_SECRET", "MAPBOX_TOKEN"];
+    const required = ["DB_CONNECT", "JWT_SECRET", "MAPBOX_TOKEN", "RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET"];
     const missing = required.filter(name => !process.env[name]);
 
     if (missing.length > 0) {

@@ -23,7 +23,7 @@ module.exports.getMyRides = async (req, res) => {
                 path: "captain",
                 select: "fullName vehicle",
             })
-            .select("status fare pickup destination vehicleType createdAt cancelledBy rating");
+            .select("status fare pickup destination vehicleType createdAt cancelledBy rating paymentStatus");
 
         const total = await rideModel.countDocuments({ user: req.user._id });
         const hasMore = skip + rides.length < total;
@@ -64,7 +64,7 @@ module.exports.getCaptainRides = async (req, res) => {
                 path: "user",
                 select: "fullname.firstname",
             })
-            .select("status fare pickup destination vehicleType createdAt cancelledBy");
+            .select("status fare pickup destination vehicleType createdAt cancelledBy paymentStatus");
 
         const total = await rideModel.countDocuments({
             captain: req.captain._id,
