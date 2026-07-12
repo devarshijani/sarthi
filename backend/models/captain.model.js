@@ -56,6 +56,10 @@ const captainSchema = new mongoose.Schema({
         }
     },
 
+    ratingStats: {
+        totalRating: { type: Number, default: 0 },
+        ratingCount: { type: Number, default: 0 }
+    },
     socketId: {
         type: String
     }

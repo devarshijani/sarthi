@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import RatingStars from "../components/RatingStars";
+import RatingModal from "../components/RatingModal";
 
 const RideHistory = () => {
   const navigate = useNavigate();
@@ -9,6 +11,8 @@ const RideHistory = () => {
   const [error, setError] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+  const [activeRideId, setActiveRideId] = useState(null);
+  const [showRatingModal, setShowRatingModal] = useState(false);
 
   const fetchRides = async (pageNum = 1, append = false) => {
     try {
@@ -51,6 +55,14 @@ const RideHistory = () => {
     if (hasMore) {
       fetchRides(page + 1, true);
     }
+  };
+
+  const handleRatingSuccess = (newRating) => {
+    setRides((prev) =>
+      prev.map((r) =>
+        r._id === activeRideId ? { ...r, rating: newRating } : r
+      )
+    );
   };
 
   const getStatusBadgeClass = (status) => {
@@ -153,6 +165,25 @@ const RideHistory = () => {
                     )}
                   </div>
                 )}
+
+                {ride.status === "completed" && (
+                  <div className="mt-3 flex justify-between items-center text-xs border-t border-dashed pt-2">
+                    <span className="text-gray-500 font-medium">Rating:</span>
+                    {ride.rating ? (
+                      <RatingStars rating={ride.rating} size="text-sm" />
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setActiveRideId(ride._id);
+                          setShowRatingModal(true);
+                        }}
+                        className="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-xs font-bold shadow-sm hover:bg-amber-600 transition"
+                      >
+                        Rate Captain
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
 
@@ -169,6 +200,14 @@ const RideHistory = () => {
           </div>
         )}
       </div>
+
+      {showRatingModal && (
+        <RatingModal
+          rideId={activeRideId}
+          onClose={() => setShowRatingModal(false)}
+          onSuccess={handleRatingSuccess}
+        />
+      )}
     </div>
   );
 };

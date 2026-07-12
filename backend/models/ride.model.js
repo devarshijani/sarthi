@@ -53,6 +53,17 @@ const rideSchema = new mongoose.Schema(
             enum: ["user", "captain", null],
             default: null,
         },
+        rating: {
+            type: Number,
+            min: 1,
+            max: 5,
+            default: null,
+        },
+        ratingComment: {
+            type: String,
+            maxlength: 200,
+            default: null,
+        },
         otp: {
             type: String,
             // required: true,

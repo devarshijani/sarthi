@@ -58,7 +58,23 @@ const CaptainDetails = () => {
               {initial}
             </div>
             <div>
-              <h4 className="text-lg font-semibold capitalize">{captainName}</h4>
+              <h4 className="text-lg font-semibold capitalize flex items-center gap-2">
+                {captainName}
+                <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 normal-case">
+                  {loading ? (
+                    <span className="animate-pulse bg-amber-200 h-3 w-8 rounded"></span>
+                  ) : error ? (
+                    "New"
+                  ) : stats?.ratingCount > 0 ? (
+                    <>
+                      <i className="ri-star-fill text-amber-500"></i>
+                      {stats?.averageRating} ({stats?.ratingCount})
+                    </>
+                  ) : (
+                    "New"
+                  )}
+                </span>
+              </h4>
               <p className="text-sm text-gray-500">{vehicleName}</p>
             </div>
           </div>

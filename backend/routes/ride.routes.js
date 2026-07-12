@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { body, query } = require("express-validator");
+const { body, query, param } = require("express-validator");
 const rideController = require("../controllers/ride.controller");
 const rideHistoryController = require("../controllers/rideHistory.controller");
 const { authUser, authCaptain } = require("../middlewares/auth.middleware");
@@ -26,5 +26,14 @@ router.get(
     rideController.fare
 );
 
+
+router.post(
+    "/:rideId/rate",
+    authUser,
+    param("rideId").isMongoId().withMessage("Invalid ride ID"),
+    body("rating").isInt({ min: 1, max: 5 }).withMessage("Rating must be an integer between 1 and 5"),
+    body("comment").optional({ checkFalsy: true }).isString().isLength({ max: 200 }).withMessage("Comment must not exceed 200 characters"),
+    rideController.rateRide
+);
 
 module.exports = router;

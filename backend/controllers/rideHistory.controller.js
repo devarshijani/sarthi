@@ -1,4 +1,5 @@
 const rideModel = require("../models/ride.model");
+const captainModel = require("../models/captain.model");
 
 /**
  * GET /api/rides/my-rides (authUser)
@@ -22,7 +23,7 @@ module.exports.getMyRides = async (req, res) => {
                 path: "captain",
                 select: "fullName vehicle",
             })
-            .select("status fare pickup destination vehicleType createdAt cancelledBy");
+            .select("status fare pickup destination vehicleType createdAt cancelledBy rating");
 
         const total = await rideModel.countDocuments({ user: req.user._id });
         const hasMore = skip + rides.length < total;
@@ -134,7 +135,19 @@ module.exports.getCaptainStats = async (req, res) => {
             todayTrips: 0,
         };
 
-        return res.status(200).json(result);
+        const captain = await captainModel.findById(req.captain._id);
+        const ratingStats = captain?.ratingStats || { totalRating: 0, ratingCount: 0 };
+        const ratingCount = ratingStats.ratingCount || 0;
+        let averageRating = null;
+        if (ratingCount > 0) {
+            averageRating = Math.round((ratingStats.totalRating / ratingCount) * 10) / 10;
+        }
+
+        return res.status(200).json({
+            ...result,
+            averageRating,
+            ratingCount
+        });
     } catch (err) {
         console.error("GET CAPTAIN STATS ERROR:", err);
         return res.status(500).json({ message: "Internal server error" });

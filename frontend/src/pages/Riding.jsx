@@ -1,14 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import axios from "axios";
 import LiveTracking from "../components/LiveTracking";
 import logo from "../assets/logo.png";
+import { SocketDataContext } from "../context/SocketContext";
+import RatingModal from "../components/RatingModal";
 
 const Riding = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { socket } = useContext(SocketDataContext);
   const [showPaymentPanel, setShowPaymentPanel] = useState(false);
   const [coords, setCoords] = useState(null);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingRideId, setRatingRideId] = useState(null);
 
   // Fallback data for testing/refresh
   const fallbackRide = {
@@ -54,9 +59,28 @@ const Riding = () => {
     }
   }, [ride]);
 
+  /* ================= SOCKET EVENT FOR RIDE COMPLETION ================= */
+  useEffect(() => {
+    if (!socket) return;
+
+    const onRideCompleted = (completedRide) => {
+      if (completedRide && (completedRide._id === ride?._id || ride?._id === "dummy_ride_id")) {
+        setRatingRideId(completedRide._id);
+        setShowRatingModal(true);
+      }
+    };
+
+    socket.on("ride-completed", onRideCompleted);
+
+    return () => {
+      socket.off("ride-completed", onRideCompleted);
+    };
+  }, [socket, ride]);
+
   const handlePayment = () => {
     alert("Payment successful!");
-    navigate("/home");
+    setRatingRideId(ride?._id);
+    setShowRatingModal(true);
   };
 
   return (
@@ -202,6 +226,14 @@ const Riding = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {showRatingModal && (
+        <RatingModal
+          rideId={ratingRideId === "dummy_ride_id" ? ride?._id : ratingRideId}
+          onClose={() => navigate("/home")}
+          onSuccess={() => console.log("Ride rated successfully")}
+        />
       )}
     </div>
   );
