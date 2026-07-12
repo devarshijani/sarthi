@@ -8,6 +8,7 @@ const ConfirmedRide = ({
   pickup,
   destination,
   selectedVehicle,
+  setRide,
 }) => {
 
   const handleConfirmRide = async () => {
@@ -32,6 +33,10 @@ const ConfirmedRide = ({
           },
         }
       );
+
+      if (res.data?.ride) {
+        setRide(res.data.ride);
+      }
 
       // ✅ CRITICAL UI FLOW
       setConfirmRideOpen(false);

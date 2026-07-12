@@ -127,16 +127,45 @@ const CaptainDashboard = () => {
       navigate("/captain-riding", { state: { ride: rideData } });
     };
 
+    const onRideCancelled = ({ rideId, cancelledBy }) => {
+      setRide((currentRide) => {
+        if (currentRide && currentRide._id === rideId) {
+          setRideStage("IDLE");
+          if (cancelledBy === "user") {
+            alert("Rider cancelled");
+          } else {
+            alert("Ride cancelled");
+          }
+          return null;
+        }
+        return currentRide;
+      });
+    };
+
+    const onRideExpired = ({ rideId }) => {
+      setRide((currentRide) => {
+        if (currentRide && currentRide._id === rideId) {
+          setRideStage("IDLE");
+          return null;
+        }
+        return currentRide;
+      });
+    };
+
     socket.on("ride-started-success", onRideStarted);
     socket.on("otp-invalid", () => alert("❌ Invalid OTP"));
     socket.on("otp-expired", () => alert("❌ OTP expired — ask the rider to request again"));
     socket.on("otp-locked", () => alert("❌ Too many wrong attempts — ride locked"));
+    socket.on("ride-cancelled", onRideCancelled);
+    socket.on("ride-expired", onRideExpired);
 
     return () => {
       socket.off("ride-started-success", onRideStarted);
       socket.off("otp-invalid");
       socket.off("otp-expired");
       socket.off("otp-locked");
+      socket.off("ride-cancelled", onRideCancelled);
+      socket.off("ride-expired", onRideExpired);
     };
   }, [socket, navigate]);
 
@@ -154,6 +183,14 @@ const CaptainDashboard = () => {
       rideId: ride._id,
       otp,
     });
+  };
+
+  const handleCancelRide = () => {
+    if (ride?._id && socket) {
+      socket.emit("cancel-ride", { rideId: ride._id });
+    }
+    setRideStage("IDLE");
+    setRide(null);
   };
 
   /* ================= RENDER ================= */
@@ -187,7 +224,7 @@ const CaptainDashboard = () => {
         <ConfirmRidePopUp
           ride={ride}
           onConfirm={handleConfirmRide}
-          onCancel={() => setRideStage("IDLE")}
+          onCancel={handleCancelRide}
         />
       </div>
     </div>

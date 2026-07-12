@@ -102,14 +102,55 @@ const Home = () => {
       navigate("/riding", { state: { ride } });
     };
 
+    const onRideCancelled = ({ rideId, cancelledBy }) => {
+      setRide((currentRide) => {
+        if (currentRide && currentRide._id === rideId) {
+          setLookingForDriverOpen(false);
+          setWaitingForDriverOpen(false);
+          if (cancelledBy === "captain") {
+            alert("Captain cancelled the ride");
+          } else {
+            alert("Ride cancelled");
+          }
+          return null;
+        }
+        return currentRide;
+      });
+    };
+
+    const onRideExpired = ({ rideId }) => {
+      setRide((currentRide) => {
+        if (currentRide && currentRide._id === rideId) {
+          setLookingForDriverOpen(false);
+          setWaitingForDriverOpen(false);
+          alert("No captains available right now — try again");
+          return null;
+        }
+        return currentRide;
+      });
+    };
+
     socket.on("ride-accepted", onRideAccepted);
     socket.on("ride-started", onRideStarted);
+    socket.on("ride-cancelled", onRideCancelled);
+    socket.on("ride-expired", onRideExpired);
 
     return () => {
       socket.off("ride-accepted", onRideAccepted);
       socket.off("ride-started", onRideStarted);
+      socket.off("ride-cancelled", onRideCancelled);
+      socket.off("ride-expired", onRideExpired);
     };
   }, [socket, navigate]);
+
+  const cancelRide = () => {
+    if (ride?._id && socket) {
+      socket.emit("cancel-ride", { rideId: ride._id });
+    }
+    setLookingForDriverOpen(false);
+    setWaitingForDriverOpen(false);
+    setRide(null);
+  };
 
   /* ================= FETCH FARE ================= */
   const findTrip = async () => {
@@ -292,6 +333,7 @@ const Home = () => {
           setConfirmRideOpen={setConfirmRideOpen}
           setVehiclePanelOpen={setVehiclePanelOpen}
           setLookingForDriverOpen={setLookingForDriverOpen}
+          setRide={setRide}
         />
 
       </div>
@@ -304,7 +346,7 @@ const Home = () => {
           pickup={pickup}
           destination={destination}
           selectedVehicle={selectedVehicle}
-          onCancel={() => setLookingForDriverOpen(false)}
+          onCancel={cancelRide}
         />
       </div>
 
@@ -317,6 +359,7 @@ const Home = () => {
           ride={ride}
           setWaitingForDriverOpen={setWaitingForDriverOpen}
           waitingForDriverOpen={waitingForDriverOpen}
+          onCancel={cancelRide}
         />
       </div>
     </div>

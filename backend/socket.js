@@ -216,7 +216,85 @@ function initializeSocket(server) {
             }
         });
 
+        /* ========== CANCEL RIDE ========== */
+        socket.on("cancel-ride", async ({ rideId }) => {
+            try {
+                const ride = await rideModel.findById(rideId).populate("user").populate("captain");
+                if (!ride) {
+                    socket.emit("cancel-error", { message: "Ride not found" });
+                    return;
+                }
+
+                // Ownership Check
+                if (socket.userType === "user") {
+                    if (!ride.user || ride.user._id.toString() !== socket.userId) {
+                        socket.emit("cancel-error", { message: "Unauthorized to cancel this ride" });
+                        return;
+                    }
+                } else if (socket.userType === "captain") {
+                    if (!ride.captain || ride.captain._id.toString() !== socket.userId) {
+                        socket.emit("cancel-error", { message: "Unauthorized to cancel this ride" });
+                        return;
+                    }
+                } else {
+                    socket.emit("cancel-error", { message: "Unauthorized" });
+                    return;
+                }
+
+                // Allowed States Check
+                const status = ride.status;
+                if (socket.userType === "user") {
+                    if (status !== "pending" && status !== "accepted") {
+                        socket.emit("cancel-error", { message: `Cannot cancel ride with status '${status}'` });
+                        return;
+                    }
+                } else if (socket.userType === "captain") {
+                    if (status !== "accepted") {
+                        socket.emit("cancel-error", { message: `Cannot cancel ride with status '${status}'` });
+                        return;
+                    }
+                }
+
+                // Perform Cancellation
+                ride.status = "cancelled";
+                ride.cancelledBy = socket.userType;
+                await ride.save();
+
+                // Make Captain available if one was assigned
+                if (ride.captain) {
+                    await captainModel.findByIdAndUpdate(ride.captain._id, {
+                        status: "available",
+                    });
+                }
+
+                // Notify Parties
+                if (status === "pending") {
+                    // Broadcast to all sockets so captains can dismiss RidePopUp
+                    io.emit("ride-cancelled", { rideId });
+                } else if (status === "accepted") {
+                    // Target emit to user and captain
+                    if (ride.user?.socketId) {
+                        io.to(ride.user.socketId).emit("ride-cancelled", {
+                            rideId,
+                            cancelledBy: socket.userType,
+                        });
+                    }
+                    if (ride.captain?.socketId) {
+                        io.to(ride.captain.socketId).emit("ride-cancelled", {
+                            rideId,
+                            cancelledBy: socket.userType,
+                        });
+                    }
+                }
+
+            } catch (err) {
+                console.error("cancel-ride error:", err);
+                socket.emit("cancel-error", { message: "Internal server error" });
+            }
+        });
+
     });
+    return io;
 }
 
 /* ================= SEND HELPER ================= */

@@ -2,7 +2,8 @@ import React from "react";
 
 const WaitingForDriver = ({
   setWaitingForDriverOpen,
-  ride
+  ride,
+  onCancel,
 }) => {
   return (
     <div>
@@ -103,6 +104,14 @@ const WaitingForDriver = ({
             </div>
           </div>
         </div>
+
+        <button
+          onClick={onCancel}
+          className="w-full mt-4 bg-red-600 text-white py-3 rounded-lg font-semibold"
+        >
+          Cancel Ride
+        </button>
+
       </div>
     </div>
   );
