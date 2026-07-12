@@ -8,6 +8,7 @@ import CaptainSignup from "./pages/CaptainSignup";
 import Riding from "./pages/Riding";
 import CaptainRiding from "./pages/CaptainRiding";
 import Home from "./pages/Home";
+import NotFound from "./pages/NotFound";
 import 'leaflet/dist/leaflet.css';
 
 import UserProtectedWrapper from "./pages/UserProtectedWrapper";
@@ -41,6 +42,8 @@ const App = () => {
           element={<CaptainDashboard />}
         />
       </Route>
+      {/* -------- CATCH-ALL 404 ROUTE -------- */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

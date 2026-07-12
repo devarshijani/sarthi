@@ -22,7 +22,7 @@ const ConfirmedRide = ({
           vehicleType:
             selectedVehicle.name === "Moto"
               ? "bike"
-              : selectedVehicle.name === "UberGo"
+              : selectedVehicle.name === "Sarthi Go"
                 ? "car"
                 : "auto",
         },

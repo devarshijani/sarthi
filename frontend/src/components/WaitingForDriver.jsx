@@ -21,14 +21,22 @@ const WaitingForDriver = ({
       {/* Driver Card */}
       <div className="flex items-center justify-between bg-yellow-400 rounded-lg p-3 mt-5">
         <div className="flex items-center gap-3">
-          <img
-            className="h-12 w-12 rounded-full object-cover"
-            src="https://randomuser.me/api/portraits/men/32.jpg"
-            alt="Driver"
-          />
-          <h2 className="text-lg font-medium capitalize">{ride?.captain?.fullname?.firstname}</h2>
+          {/* Initials Avatar */}
+          <div className="h-12 w-12 rounded-full bg-black text-white flex items-center justify-center font-bold text-xl uppercase">
+            {(() => {
+              const driverFirstName = ride?.captain?.fullName?.firstName || ride?.captain?.fullname?.firstname || (ride?.captain?.name ? ride.captain.name.split(" ")[0] : "") || "Driver";
+              return driverFirstName.charAt(0).toUpperCase();
+            })()}
+          </div>
+          <h2 className="text-lg font-medium capitalize text-black">
+            {ride?.captain?.name || 
+              (ride?.captain?.fullName?.firstName || ride?.captain?.fullname?.firstname
+                ? `${ride?.captain?.fullName?.firstName || ride?.captain?.fullname?.firstname} ${ride?.captain?.fullName?.lastName || ride?.captain?.fullname?.lastname || ""}`.trim()
+                : "Driver")
+            }
+          </h2>
         </div>
-        <h4 className="text-xl font-semibold">-2.2 KM</h4>
+        <h4 className="text-xl font-semibold text-black">-2.2 KM</h4>
       </div>
 
       {/* Vehicle Details */}
@@ -39,10 +47,10 @@ const WaitingForDriver = ({
             <i className="text-3xl ri-car-fill"></i>
             <div className="flex-1">
               <h3 className="text-lg font-medium capitalize">
-                {ride?.captain?.vehicle?.vehicleType}
+                {ride?.vehicleType || ride?.captain?.vehicleType || ride?.captain?.vehicle?.vehicleType || "—"}
               </h3>
               <p className="text-sm text-gray-600 capitalize">
-                {ride?.captain?.vehicle?.color} {ride?.captain?.vehicle?.model}
+                {ride?.captain?.vehicle?.color || "—"}
               </p>
             </div>
             <div className="text-right">

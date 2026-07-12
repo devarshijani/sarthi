@@ -23,13 +23,16 @@ const UserSignup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [userData, setUserData] = useState({});
+  const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
   const { setUser } = useContext(UserDataContext);
 
   const submitHandler = async (e) => {
     e.preventDefault();
+    setErrorMsg("");
+    setLoading(true);
     const newUser = { fullname: { firstname, lastname }, email, password };
 
     try {
@@ -39,15 +42,18 @@ const UserSignup = () => {
       );
 
       if (response.status === 201) {
+        setFirstname("");
+        setLastname("");
+        setEmail("");
+        setPassword("");
         navigate("/login"); // ✅ redirect to login, not /home
       }
     } catch (err) {
-      // Show error to user
-      const message = err.response?.data?.message || "Signup failed. Please try again.";
-      alert(message);
+      setErrorMsg(err.response?.data?.message || "Signup failed. Please try again.");
+      setPassword("");
+    } finally {
+      setLoading(false);
     }
-
-    setFirstname(""); setLastname(""); setEmail(""); setPassword("");
   };
 
   return (
@@ -92,10 +98,16 @@ const UserSignup = () => {
             </button>
           </div>
 
-          <button type="submit"
-            className="w-full bg-black text-white py-3 rounded-md text-lg font-medium mt-4"
+          {errorMsg && (
+            <p className="text-red-500 text-sm font-semibold mb-2 text-center">{errorMsg}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-black text-white py-3 rounded-md text-lg font-medium mt-4 disabled:opacity-50"
           >
-            Signup
+            {loading ? "Creating account..." : "Signup"}
           </button>
         </form>
 

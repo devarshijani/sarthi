@@ -30,9 +30,13 @@ const CaptainSignup = () => {
   const [vehiclePlate, setVehiclePlate] = useState("");
   const [vehicleCapacity, setVehicleCapacity] = useState("");
   const [vehicleType, setVehicleType] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const submitHandler = async (e) => {
     e.preventDefault();
+    setErrorMsg("");
+    setLoading(true);
     const captainData = {
       fullname: { firstname, lastname },
       email,
@@ -51,7 +55,10 @@ const CaptainSignup = () => {
       );
       navigate("/captain-login");
     } catch (err) {
-      alert(err.response?.data?.message || "Signup failed");
+      setErrorMsg(err.response?.data?.message || "Signup failed. Please try again.");
+      setPassword("");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -132,10 +139,16 @@ const CaptainSignup = () => {
             </div>
           </div>
 
-          <button type="submit"
-            className="w-full bg-black text-white py-3 rounded-md text-lg font-medium"
+          {errorMsg && (
+            <p className="text-red-500 text-sm font-semibold mb-2 text-center">{errorMsg}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-black text-white py-3 rounded-md text-lg font-medium disabled:opacity-50"
           >
-            Signup as Captain
+            {loading ? "Creating account..." : "Signup as Captain"}
           </button>
         </form>
 

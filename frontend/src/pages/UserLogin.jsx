@@ -11,27 +11,37 @@ const UserLogin = () => {
   const [password, setPassword] = useState("");
   const [userData, setUserData] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(false);
   const { user, setUser } = useContext(UserDataContext);
 
   const submitHandler = async (e) => {
     e.preventDefault();
+    setErrorMsg("");
+    setLoading(true);
 
     const userData = {
       email: email,
       password: password,
     }
 
-    const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/users/login`, userData);
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/users/login`, userData);
 
-    if (response.status === 200) {
-      const data = response.data;
-      setUser(data.user);
-      localStorage.setItem("userToken", data.token);
-      navigate("/home");
+      if (response.status === 200) {
+        const data = response.data;
+        setUser(data.user);
+        localStorage.setItem("userToken", data.token);
+        navigate("/home");
+        setEmail("");
+        setPassword("");
+      }
+    } catch (error) {
+      setErrorMsg(error.response?.data?.message || "Something went wrong. Please try again.");
+      setPassword("");
+    } finally {
+      setLoading(false);
     }
-
-    setEmail("");
-    setPassword("");
   };
 
   return (
@@ -78,8 +88,16 @@ const UserLogin = () => {
             </button>
           </div>
 
-          <button type="submit" className="w-full bg-black text-white py-2 rounded-lg">
-            Login
+          {errorMsg && (
+            <p className="text-red-500 text-sm font-semibold mb-2 text-center">{errorMsg}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-black text-white py-2 rounded-lg disabled:opacity-50"
+          >
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 

@@ -108,18 +108,26 @@ const Riding = () => {
           {/* DRIVER */}
           <div className="flex items-center justify-between mb-4 pb-4 border-b">
             <div className="flex items-center gap-3">
-              <img
-                src="https://randomuser.me/api/portraits/men/32.jpg"
-                className="h-16 w-16 rounded-full"
-                alt="driver"
-              />
+              {/* Initials Avatar */}
+              <div className="h-16 w-16 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-2xl uppercase">
+                {(() => {
+                  const driverFirstName = ride?.captain?.fullName?.firstName || ride?.captain?.fullname?.firstname || (ride?.captain?.name ? ride.captain.name.split(" ")[0] : "") || "Driver";
+                  return driverFirstName.charAt(0).toUpperCase();
+                })()}
+              </div>
               <div>
-                <h3 className="font-semibold text-lg capitalize">{ride?.captain?.fullname?.firstname || "Driver"}</h3>
+                <h3 className="font-semibold text-lg capitalize">
+                  {ride?.captain?.name || 
+                    (ride?.captain?.fullName?.firstName || ride?.captain?.fullname?.firstname
+                      ? `${ride?.captain?.fullName?.firstName || ride?.captain?.fullname?.firstname} ${ride?.captain?.fullName?.lastName || ride?.captain?.fullname?.lastname || ""}`.trim()
+                      : "Driver")
+                  }
+                </h3>
                 <p className="text-sm text-gray-600 font-semibold capitalize">
-                  {ride?.captain?.vehicle?.plate || "MH04 AB 1234"}
+                  {ride?.captain?.vehicle?.plate || "—"}
                 </p>
-                <p className="text-sm text-gray-600">
-                  {ride?.captain?.vehicle?.vehicleType}
+                <p className="text-sm text-gray-600 capitalize">
+                  {ride?.vehicleType || ride?.captain?.vehicleType || ride?.captain?.vehicle?.vehicleType || "—"}
                 </p>
               </div>
             </div>

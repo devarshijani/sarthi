@@ -25,16 +25,24 @@ const ConfirmRidePopUp = ({ ride, onConfirm, onCancel }) => {
       {/* Rider Card */}
       <div className="flex items-center justify-between bg-yellow-400 px-4 py-3 rounded-xl mb-4">
         <div className="flex items-center gap-3">
-          <img
-            src="https://randomuser.me/api/portraits/men/32.jpg"
-            alt="user"
-            className="h-10 w-10 rounded-full"
-          />
-          <p className="font-semibold">
-            {ride.user?.fullname?.firstname} {ride.user?.fullname?.lastname}
+          {/* Initials Avatar */}
+          <div className="h-10 w-10 rounded-full bg-black text-white flex items-center justify-center font-bold text-lg uppercase">
+            {(() => {
+              const passengerFirstName = ride.user?.fullname?.firstname || ride.user?.fullName?.firstName || "Passenger";
+              return passengerFirstName.charAt(0).toUpperCase();
+            })()}
+          </div>
+          <p className="font-semibold text-black">
+            {(() => {
+              const passengerFirstName = ride.user?.fullname?.firstname || ride.user?.fullName?.firstName;
+              const passengerLastName = ride.user?.fullname?.lastname || ride.user?.fullName?.lastName;
+              return passengerFirstName 
+                ? `${passengerFirstName} ${passengerLastName || ""}`.trim()
+                : "Passenger";
+            })()}
           </p>
         </div>
-        <p className="font-semibold">
+        <p className="font-semibold text-black">
           {(ride.distance / 1000).toFixed(1)} KM
         </p>
       </div>

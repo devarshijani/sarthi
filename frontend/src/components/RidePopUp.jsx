@@ -9,14 +9,24 @@ const RidePopUp = ({ ride, onAccept, onIgnore }) => {
 
       <div className="flex items-center justify-between bg-yellow-400 px-4 py-3 rounded-xl mb-4">
         <div className="flex items-center gap-3">
-          <img
-            src="https://randomuser.me/api/portraits/men/32.jpg"
-            alt="user"
-            className="h-10 w-10 rounded-full"
-          />
-          <p className="font-semibold">{ride?.user?.fullname?.firstname} {ride?.user?.fullname?.lastname}</p>
+          {/* Initials Avatar */}
+          <div className="h-10 w-10 rounded-full bg-black text-white flex items-center justify-center font-bold text-lg uppercase">
+            {(() => {
+              const passengerFirstName = ride?.user?.fullname?.firstname || ride?.user?.fullName?.firstName || "Passenger";
+              return passengerFirstName.charAt(0).toUpperCase();
+            })()}
+          </div>
+          <p className="font-semibold text-black">
+            {(() => {
+              const passengerFirstName = ride?.user?.fullname?.firstname || ride?.user?.fullName?.firstName;
+              const passengerLastName = ride?.user?.fullname?.lastname || ride?.user?.fullName?.lastName;
+              return passengerFirstName 
+                ? `${passengerFirstName} ${passengerLastName || ""}`.trim()
+                : "Passenger";
+            })()}
+          </p>
         </div>
-        <p className="font-semibold">2.2 KM</p>
+        <p className="font-semibold text-black">2.2 KM</p>
       </div>
 
       <div className="space-y-3 mb-5">

@@ -23,9 +23,13 @@ const CaptainLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const submitHandler = async (e) => {
     e.preventDefault();
+    setErrorMsg("");
+    setLoading(true);
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/captains/login`,
@@ -34,9 +38,13 @@ const CaptainLogin = () => {
       setCaptain(response.data.captain);
       localStorage.setItem("captainToken", response.data.token);
       navigate("/captain-dashboard");
-      setEmail(""); setPassword("");
+      setEmail("");
+      setPassword("");
     } catch (error) {
-      console.error(error.response?.data || error.message);
+      setErrorMsg(error.response?.data?.message || "Something went wrong. Please try again.");
+      setPassword("");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -69,8 +77,16 @@ const CaptainLogin = () => {
             </button>
           </div>
 
-          <button type="submit" className="w-full bg-black text-white py-2 rounded-lg">
-            Login as Captain
+          {errorMsg && (
+            <p className="text-red-500 text-sm font-semibold mb-2 text-center">{errorMsg}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-black text-white py-2 rounded-lg disabled:opacity-50"
+          >
+            {loading ? "Logging in..." : "Login as Captain"}
           </button>
         </form>
 

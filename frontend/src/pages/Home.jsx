@@ -27,6 +27,8 @@ const Home = () => {
   const [destination, setDestination] = useState("");
   const [activeField, setActiveField] = useState(null);
   const [fare, setFare] = useState({});
+  const [fareLoading, setFareLoading] = useState(false);
+  const [fareError, setFareError] = useState("");
   const [ride, setRide] = useState(null);
 
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
@@ -113,13 +115,27 @@ const Home = () => {
   const findTrip = async () => {
     setVehiclePanelOpen(true);
     setLocationPanelOpen(false);
+    setFareLoading(true);
+    setFareError("");
+    setFare({});
 
-    const res = await axios.get(
-      `${import.meta.env.VITE_BASE_URL}/api/rides/fare`,
-      { params: { pickup, destination }, withCredentials: true }
-    );
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/api/rides/fare`,
+        { params: { pickup, destination }, withCredentials: true }
+      );
 
-    setFare(res.data.fare);
+      if (res.data?.fare) {
+        setFare(res.data.fare);
+      } else {
+        throw new Error("Invalid fare response");
+      }
+    } catch (err) {
+      console.error(err);
+      setFareError("Couldn't fetch prices — please try again");
+    } finally {
+      setFareLoading(false);
+    }
   };
 
   /* ================= FETCH SUGGESTIONS ================= */
@@ -257,6 +273,8 @@ const Home = () => {
       >
         <VehiclePanel
           fare={fare}
+          fareLoading={fareLoading}
+          fareError={fareError}
           setConfirmRideOpen={setConfirmRideOpen}
           setVehiclePanel={setVehiclePanelOpen}
           setSelectedVehicle={setSelectedVehicle}
