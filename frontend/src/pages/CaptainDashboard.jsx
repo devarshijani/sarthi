@@ -87,13 +87,14 @@ const CaptainDashboard = () => {
 
     const onNewRide = (rideData) => {
       if (rideStage !== "IDLE") return;
+      if (captain?.status !== "available") return;
       setRide(rideData);
       setRideStage("REQUEST");
     };
 
     socket.on("new-ride", onNewRide);
     return () => socket.off("new-ride", onNewRide);
-  }, [socket, rideStage]);
+  }, [socket, rideStage, captain?.status]);
 
   /* ================= GSAP ================= */
   useEffect(() => {
@@ -210,7 +211,7 @@ const CaptainDashboard = () => {
       </div>
 
       {/* CAPTAIN INFO */}
-      <CaptainDetails />
+      <CaptainDetails activeRide={ride !== null} />
 
       {/* REQUEST PANEL */}
       <div

@@ -1,12 +1,35 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import axios from "axios";
 import { CaptainDataContext } from "../context/CaptainContext";
+import { SocketDataContext } from "../context/SocketContext";
 
-const CaptainDetails = () => {
-  const { captain } = React.useContext(CaptainDataContext);
+const CaptainDetails = ({ activeRide = false }) => {
+  const { captain, setCaptain } = useContext(CaptainDataContext);
+  const { socket } = useContext(SocketDataContext);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const onAvailabilityUpdated = ({ status }) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      setCaptain((prev) => ({ ...prev, status }));
+    };
+
+    socket.on("availability-updated", onAvailabilityUpdated);
+
+    return () => {
+      socket.off("availability-updated", onAvailabilityUpdated);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [socket, setCaptain]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -30,6 +53,31 @@ const CaptainDetails = () => {
 
     fetchStats();
   }, []);
+
+  const isToggleDisabled = activeRide || captain?.status === "on-trip";
+
+  const handleToggle = () => {
+    if (isToggleDisabled) return;
+
+    const currentAvailable = captain?.status === "available";
+    const nextAvailable = !currentAvailable;
+    const optimisticStatus = nextAvailable ? "available" : "unavailable";
+
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+    setCaptain((prev) => ({ ...prev, status: optimisticStatus }));
+
+    if (socket) {
+      socket.emit("toggle-availability", { available: nextAvailable });
+    }
+
+    timeoutRef.current = setTimeout(() => {
+      setCaptain((prev) => {
+        alert("Connection timed out. Status could not be updated.");
+        return { ...prev, status: currentAvailable ? "available" : "unavailable" };
+      });
+    }, 3000);
+  };
 
   const firstName = captain?.fullName?.firstName || captain?.fullname?.firstname;
   const lastName = captain?.fullName?.lastName || captain?.fullname?.lastname;
@@ -148,11 +196,44 @@ const CaptainDetails = () => {
         {/* Divider */}
         <div className="h-[1px] bg-gray-200 my-4"></div>
 
-        {/* Status */}
-        <div className="text-center py-2 bg-gray-50 rounded-xl">
-          <p className="text-gray-600 text-xs font-medium">
-            You are online and ready to accept rides
-          </p>
+        {/* Status Toggle Switch */}
+        <div className="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-xl mt-4 border border-gray-100">
+          <div className="flex flex-col">
+            <span className="text-sm font-semibold text-gray-800">
+              {captain?.status === "available" ? "Online" : "Offline"}
+            </span>
+            <span className="text-xs text-gray-500">
+              {captain?.status === "available"
+                ? "Receiving ride requests"
+                : "Not receiving requests"}
+            </span>
+          </div>
+
+          <div className="relative flex items-center">
+            {isToggleDisabled && (
+              <span className="text-xs text-red-500 font-semibold mr-3">
+                Finish your ride first
+              </span>
+            )}
+            <button
+              disabled={isToggleDisabled}
+              onClick={handleToggle}
+              className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 focus:outline-none ${
+                isToggleDisabled
+                  ? "bg-gray-200 cursor-not-allowed"
+                  : captain?.status === "available"
+                  ? "bg-green-500"
+                  : "bg-gray-300"
+              }`}
+              title={isToggleDisabled ? "Finish your ride first" : ""}
+            >
+              <div
+                className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-300 ${
+                  captain?.status === "available" ? "translate-x-6" : "translate-x-0"
+                }`}
+              ></div>
+            </button>
+          </div>
         </div>
       </div>
     </div>

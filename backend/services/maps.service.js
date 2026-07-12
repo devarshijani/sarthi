@@ -175,6 +175,7 @@ const captainsModel = require("../models/captain.model");
 
 module.exports.getCaptainInRadius = async (lat, lng, radius) => {
     const captains = await captainsModel.find({
+        status: "available",
         location: {
             $near: {
                 $geometry: {

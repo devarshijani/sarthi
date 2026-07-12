@@ -68,11 +68,34 @@ function initializeSocket(server) {
                 if (socket.userType === "captain") {
                     await captainModel.findByIdAndUpdate(socket.userId, {
                         socketId: socket.id,
-                        status: "available",
                     });
                 }
             } catch (err) {
                 console.error("join error:", err);
+            }
+        });
+
+        /* ========== TOGGLE AVAILABILITY ========== */
+        socket.on("toggle-availability", async ({ available }) => {
+            try {
+                if (socket.userType !== "captain") {
+                    socket.emit("unauthorized");
+                    return;
+                }
+
+                const newStatus = available ? "available" : "unavailable";
+
+                const captain = await captainModel.findByIdAndUpdate(
+                    socket.userId,
+                    { status: newStatus },
+                    { new: true }
+                );
+
+                socket.emit("availability-updated", { status: captain.status });
+
+            } catch (err) {
+                console.error("toggle-availability error:", err);
+                socket.emit("error", { message: "Internal server error" });
             }
         });
 
@@ -112,6 +135,8 @@ function initializeSocket(server) {
         socket.on("accept-ride", async ({ rideId }) => {
             try {
                 if (socket.userType !== "captain") return;
+                // Allow ride acceptance regardless of current availability status
+                // to prevent stranding riders if a captain toggles offline in a race condition.
                 const ride = await rideModel.findById(rideId).populate("user");
                 if (!ride || ride.status !== "pending") return;
 
